@@ -19,13 +19,13 @@ def checkAndBuildPaths (fpath,VERBOSE=False,BUILD=False):
 
         # if exists but is neither file nor directory..give error and exit
         if (os.path.isfile(fpath) == False) & (os.path.isdir(fpath) == False):
-            print "WARNING!!! Object at "+fpath+" exists but is not a file or a directory"
+            print "WARNING!!! Object at "+fpath+" exists but is not a file or a directory\n"
             return(-9999) 
 
        # if  either file or directory, then return success after giving tailored confirmation message
         if VERBOSE==True :
-            if os.path.isdir(fpath) == True : print "Directory "+fpath+" exists"
-            if os.path.isfile(fpath) == True : print "File "+fpath+" exists"
+            if os.path.isdir(fpath) == True : print "Directory "+fpath+" exists\n"
+            if os.path.isfile(fpath) == True : print "File "+fpath+" exists\n"
 
         return(0)        
 
@@ -34,7 +34,7 @@ def checkAndBuildPaths (fpath,VERBOSE=False,BUILD=False):
 
         # if we are not building missing directories, just return error
         if BUILD==False:
-            print "WARNING!!! Object at "+fpath+" does not exist - not building so check manually"
+            print "WARNING!!! Object at "+fpath+" does not exist - not building so check manually\n"
             return(-9999)
 
         # if we are building missing directories, first guess whether the desired path is to a directory or a file:
@@ -48,7 +48,7 @@ def checkAndBuildPaths (fpath,VERBOSE=False,BUILD=False):
            pathtype = "DIR"
         else:
             pathtype = "FILE"
-            print "WARNING!!! Object at "+fpath+" does not exist - asked to build BUT THIS LOOKS LIKE A FILE - so check manually"
+            print "WARNING!!! Object at "+fpath+" does not exist - asked to build BUT THIS LOOKS LIKE A FILE - so check manually\n"
             return(-9999)
 
         # if happy its a directory, we can now start building the missing directories
@@ -62,13 +62,13 @@ def checkAndBuildPaths (fpath,VERBOSE=False,BUILD=False):
             splitout = os.path.split(splitpath)
             splitpath = splitout[0]
             if (splitpath == '/') | (splitpath == ''):
-                print "WARNING!!! the requested path "+str(fpath)+" has non-recognized root: EXITING"
+                print "WARNING!!! the requested path "+str(fpath)+" has non-recognized root: EXITING\n"
                 return(-9999)
             missingDirs.append(splitout[1])
 
         Nmissing = len(missingDirs)
         if VERBOSE == True:
-           print "NOTICE: path to directory "+fpath+" is missing directories: "+str(missingDirs)+" ..attempting to build this path.."
+           print "NOTICE: path to directory "+fpath+" is missing directories: "+str(missingDirs)+" ..attempting to build this path..\n"
 
 
         # now loop throgh each missing directory and attempt to build
@@ -80,10 +80,10 @@ def checkAndBuildPaths (fpath,VERBOSE=False,BUILD=False):
                 if VERBOSE ==True: print splitpath
                 os.mkdir(splitpath)
             except OSError:
-                print "WARNING!!!! could not build directory "+str(missingDirs[Nmissing-(i+1)])+" : EXITING"
+                print "WARNING!!!! could not build directory "+str(missingDirs[Nmissing-(i+1)])+" : EXITING\n"
                 return(-9999)
             if VERBOSE == True:
-                print "succesfully built directory "+str(missingDirs[Nmissing-(i+1)])
+                print "succesfully built directory "+str(missingDirs[Nmissing-(i+1)])+"\n"
 
         return(0)
 
