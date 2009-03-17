@@ -56,9 +56,9 @@ returnNewHeader<-function(bottomOBS,topOBS,leftOBS,rightOBS){
 
   # AF
     bottomOBS<-NA
-    topOBS <-25.050171
+    topOBS <-NA
     leftOBS<--23.833525
-    rightOBS <-53.140216
+    rightOBS <-55
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)
 
   # AS
