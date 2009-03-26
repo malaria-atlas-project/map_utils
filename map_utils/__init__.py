@@ -20,7 +20,7 @@ def grid_convert(g, frm, to, validate=False):
       - to : format string
       
       Example format strings:
-        - x+y+ means that 
+        - x+y+ (the way Anand does it) means that 
             - g[i+1,j] is west of g[i,j]
             - g[i,j+1] is north of g[i,j]
         - y-x+ (map view) means that 
