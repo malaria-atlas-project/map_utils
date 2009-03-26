@@ -1,7 +1,19 @@
 from checkAndBuildPaths import checkAndBuildPaths
 from quantile_funs import *
 
-def grid_convert(g, frm, to):
+def validate_format_str(st):
+    for i in [0,2]:
+        if not st[i] in ['x','y']:
+            raise ValueError, 'Directions must be x or y'
+    for j in [1,3]:
+        if not st[j] in ['-', '+']:
+            raise ValueError, 'Orders must be + or -'
+            
+    if st[0]==st[2]:
+        raise ValueError, 'Directions must be different'
+    
+    
+def grid_convert(g, frm, to, validate=False):
     """Converts a grid to a new layout.
       - g : 2d array
       - frm : format string
@@ -16,17 +28,10 @@ def grid_convert(g, frm, to):
             - g[i,j+1] is west of g[i,j]"""
     
     # Validate format strings
-    for st in [frm, to]:
-        for i in [0,2]:
-            if not st[i] in ['x','y']:
-                raise ValueError, 'Directions must be x or y'
-        for j in [1,3]:
-            if not st[j] in ['-', '+']:
-                raise ValueError, 'Orders must be + or -'
-                
-        if st[0]==st[2]:
-            raise ValueError, 'Directions must be different'
-    
+    if validate:
+        for st in [frm, to]:
+            validate_format_str(st)
+        
     # Transpose if necessary
     if not frm[0]==to[0]:
         g = g.T
