@@ -14,6 +14,7 @@ if __name__ == '__main__':
             author="Peter Gething and Anand Patil", 
             author_email="map@map.ox.ac.uk",
             url="www.map.ox.ac.uk",
+            packages=['map_utils'],
             license="Public domain",
             **(config.todict()))
 

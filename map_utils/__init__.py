@@ -1,4 +1,5 @@
 from checkAndBuildPaths import checkAndBuildPaths
+from quantile_funs import *
 
 def grid_convert(g, frm, to):
     """Converts a grid to a new layout.
