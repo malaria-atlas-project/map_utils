@@ -71,7 +71,7 @@ returnNewHeader<-function(bottomOBS,topOBS,leftOBS,rightOBS){
 
 
    # kenya crude
-     bottomOBS<--4.9
+    bottomOBS<--4.9
     topOBS <-4.8
     leftOBS<-33.5
     rightOBS <-42
