@@ -1,0 +1,48 @@
+#!/usr/bin/python
+
+import tables as tb
+import numpy as np
+import os,sys
+
+dbfile = sys.argv[1]
+burn = int(sys.argv[2])
+
+path, fname = os.path.split(dbfile)
+dbname, crap = os.path.splitext(fname)
+
+hf = tb.openFile(dbfile)
+hr = hf.root.chain0.PyMCsamples
+
+ind = np.array(np.linspace(burn, len(hr)-1, 500), dtype=int)
+
+os.mkdir(dbname)
+os.chdir(dbname)
+
+# Write in longitude, latitude and time
+lpm = hf.root.metadata.logp_mesh
+comps = ['lon','lat','t']
+for i in xrange(3):
+    lpm[:,i].tofile(comps[i]+'.txt',sep=',')
+
+# Write in the traces
+for n in hr.colnames:
+    # Exclude step method tuning info
+    if n.find('Metropolis')>-1:
+        continue
+    col = hr.colinstances[n]
+    # Vector-valued variables' traces
+    if len(col.dtype.shape) > 0:
+        f = file(n+'.txt','w')
+        for i in ind:
+            col[i].tofile(f,sep=',')
+            if i != ind[-1]:
+                f.write('\n')
+        f.close()
+    # Scalar-valued variables' traces
+    else:
+        col[:][ind].tofile(n+'.txt',sep=',')
+    
+# Zip and return    
+os.chdir('..')
+os.system('tar -cf %s.tar %s'%(dbname, dbname))
+os.system('gzip %s.tar'%dbname)

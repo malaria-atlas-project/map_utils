@@ -5,6 +5,7 @@
 
 from setuptools import setup
 from numpy.distutils.misc_util import Configuration
+import os
 config = Configuration('map_utils',parent_package=None,top_path=None)
 
 if __name__ == '__main__':
@@ -17,4 +18,6 @@ if __name__ == '__main__':
             packages=['map_utils'],
             license="Public domain",
             **(config.todict()))
+    os.system('chmod ugo+x map_utils/trace-to-txt')
+    os.system('cp map_utils/trace-to-txt /usr/local/bin')
 
