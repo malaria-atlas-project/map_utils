@@ -39,33 +39,33 @@ returnNewHeader<-function(bottomOBS,topOBS,leftOBS,rightOBS){
 #######################################################################
 
  ## define original header
-    ncols<-         6281
-    nrows<-         1605
-    xllcorner<- -91.45003542
-    yllcorner<-     -29.23335764
+    ncols<-         8664
+    nrows<-         3384
+    xllcorner<-     -180
+    yllcorner<-     -57
     cellsize<-      0.04166665
 
  ## define observed edge locations (NA denotes same as original) and call function
 
   # AM
-    bottomOBS<--27.119682
-    topOBS <-20.119948
-    leftOBS<-NA
-    rightOBS <--37.002662
+    bottomOBS<- -24.397
+    topOBS <-21.756
+    leftOBS<--95.111
+    rightOBS <--38.316
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)
 
   # AF
-    bottomOBS<-NA
-    topOBS <-NA
-    leftOBS<--23.833525
-    rightOBS <-55
+    bottomOBS<--30.336
+    topOBS <-25.963
+    leftOBS<--18.395
+    rightOBS <-54.485
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)
 
   # AS
-    bottomOBS<--20.286698
-    topOBS <-NA
-    leftOBS<-52.656031
-    rightOBS <-NA
+    bottomOBS<--20.644
+    topOBS <-41.595
+    leftOBS<-38.336
+    rightOBS <-170.936
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)
 
 
