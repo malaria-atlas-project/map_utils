@@ -2,6 +2,7 @@ from checkAndBuildPaths import checkAndBuildPaths
 from quantile_funs import *
 from getAsciiheaderFromTemplateHDF5 import *
 from exportAscii import *
+from pymc_utils import *
 
 
 def validate_format_str(st):
