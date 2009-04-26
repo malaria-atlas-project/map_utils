@@ -57,27 +57,16 @@ def basic_spatial_submodel(lon, lat, covariate_values, cpus):
                 out += c[0]*c[1]
             return out
 
-        # Create covariance and MV-normal F if model is spatial.   
-        try:
-            # A Deterministic valued as a Covariance object. Uses covariance my_st, defined above. 
-            @pm.deterministic(trace=True)
-            def C(amp=amp,scale=scale,inc=inc,ecc=ecc):
-                return pm.gp.FullRankCovariance(pm.gp.cov_funs.matern.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc, diff_degree=dd,n_threads=cpus)
+        # A Deterministic valued as a Covariance object. Uses covariance my_st, defined above. 
+        @pm.deterministic(trace=True)
+        def C(amp=amp,scale=scale,inc=inc,ecc=ecc):
+            return pm.gp.FullRankCovariance(pm.gp.cov_funs.matern.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc, diff_degree=dd,n_threads=cpus)
 
-            # The evaluation of the Covariance object, plus the nugget.
-            @pm.deterministic(trace=False)
-            def C_eval(C=C):
-                return C(logp_mesh, logp_mesh)
-                                            
-            # The field evaluated at the uniquified data locations
-            f = pm.MvNormalCov('f',M_eval,C_eval)            
-            
-            init_OK = True
-        except pm.ZeroProbability, msg:
-            print 'Trying again: %s'%msg
-            init_OK = False
-            gc.collect()
-
+        # The evaluation of the Covariance object, plus the nugget.
+        @pm.deterministic(trace=False)
+        def C_eval(C=C):
+            return C(logp_mesh, logp_mesh)
+                                    
 class FieldStepper(pm.StepMethod):
     """
     A special Gibbs stepper that updates tau and f together give eps_p_f
