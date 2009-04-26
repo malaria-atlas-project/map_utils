@@ -1,7 +1,7 @@
 import pymc as pm
 import numpy as np
 
-__all__ = ['FieldStepper', 'combine_spatial_inputs','basic_spatial_submodel', 'basic_st_submodel']
+__all__ = ['FieldStepper', 'combine_spatial_inputs','combine_st_inputs','basic_spatial_submodel', 'basic_st_submodel']
 
 def combine_spatial_inputs(lon,lat):
     # Convert latitude and longitude from degrees to radians.
@@ -12,7 +12,7 @@ def combine_spatial_inputs(lon,lat):
     data_mesh = np.vstack((lon, lat)).T 
     return data_mesh
     
-def combine_input_data(lon,lat,t):
+def combine_st_inputs(lon,lat,t):
     # Convert latitude and longitude from degrees to radians.
     lon = lon*np.pi/180.
     lat = lat*np.pi/180.
@@ -23,8 +23,7 @@ def combine_input_data(lon,lat,t):
     # Make lon, lat, t triples.
     data_mesh = np.vstack((lon, lat, t)).T 
     return data_mesh
-
-
+    
 def basic_spatial_submodel(lon, lat, covariate_values, cpus):
     """
     A stem for building spatial models.
