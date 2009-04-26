@@ -24,7 +24,7 @@ def combine_st_inputs(lon,lat,t):
     data_mesh = np.vstack((lon, lat, t)).T 
     return data_mesh
     
-def basic_spatial_submodel(lon, lat, covariate_values, cpus):
+def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
     """
     A stem for building spatial models.
     """
@@ -54,6 +54,10 @@ def basic_spatial_submodel(lon, lat, covariate_values, cpus):
     scale = pm.Exponential('scale',.1,value=1.)
     
     dd = pm.Uniform('dd',.5,3)
+    
+    for s in [inc, sqrt_ecc, amp, scale, dd]:
+        if prior_params.has_key(s.__name__):
+            s.parents.update(prior_params[s.__name__])
         
     # The mean of the field
     @pm.deterministic(trace=True)
@@ -70,8 +74,8 @@ def basic_spatial_submodel(lon, lat, covariate_values, cpus):
 
     # A Deterministic valued as a Covariance object. Uses covariance my_st, defined above. 
     @pm.deterministic(trace=True)
-    def C(amp=amp,scale=scale,inc=inc,ecc=ecc):
-        return pm.gp.FullRankCovariance(pm.gp.cov_funs.matern.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc, diff_degree=dd,n_threads=cpus)
+    def C(amp=amp,scale=scale,inc=inc,ecc=ecc,diff_degree=dd):
+        return pm.gp.FullRankCovariance(pm.gp.cov_funs.matern.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc, diff_degree=diff_degree)
 
     # The evaluation of the Covariance object, plus the nugget.
     @pm.deterministic(trace=False)
@@ -81,9 +85,9 @@ def basic_spatial_submodel(lon, lat, covariate_values, cpus):
     return locals()
 
 
-def basic_st_submodel(lon, lat, t, covariate_values, cpus):
+def basic_st_submodel(lon, lat, t, covariate_values, cpus, prior_params={}):
     
-    logp_mesh = combine_input_data(lon,lat,t)
+    logp_mesh = combine_st_inputs(lon,lat,t)
                 
     # Make coefficients for the covariates.
     m_const = pm.Uninformative('m_const', value=0.)
@@ -121,9 +125,9 @@ def basic_st_submodel(lon, lat, t, covariate_values, cpus):
     def sin_frac(value=.1):
         return 0.
     
-    if lockdown:
-        for p in [V, amp, scale, scale_t, t_lim_corr, sin_frac]:
-            p._observed=True
+    for s in [inc, sqrt_ecc, amp, scale, scale_t, t_lim_corr, sin_frac]:
+        if prior_params.has_key(s.__name__):
+            s.parents.update(prior_params[s.__name__])
 
     # The mean of the field
     @pm.deterministic(trace=True)
