@@ -1,7 +1,7 @@
 import pymc as pm
 import numpy as np
 
-__all__ = ['FieldStepper', 'combine_spatial_inputs','generic_spatial_submodel']
+__all__ = ['FieldStepper', 'combine_spatial_inputs','basic_spatial_submodel', 'basic_st_submodel']
 
 def combine_spatial_inputs(lon,lat):
     # Convert latitude and longitude from degrees to radians.
@@ -11,61 +11,188 @@ def combine_spatial_inputs(lon,lat):
     # Make lon, lat tuples.
     data_mesh = np.vstack((lon, lat)).T 
     return data_mesh
+    
+def combine_input_data(lon,lat,t):
+    # Convert latitude and longitude from degrees to radians.
+    lon = lon*np.pi/180.
+    lat = lat*np.pi/180.
+
+    # Convert time to end year - 2009 (no sense forcing mu to adjust by too much).
+    t = t - 2009
+
+    # Make lon, lat, t triples.
+    data_mesh = np.vstack((lon, lat, t)).T 
+    return data_mesh
+
 
 def basic_spatial_submodel(lon, lat, covariate_values, cpus):
+    """
+    A stem for building spatial models.
+    """
     logp_mesh = combine_spatial_inputs(lon,lat)
 
     # =====================
     # = Create PyMC model =
     # =====================    
-    init_OK = False
-    while not init_OK:
                 
-        # Make coefficients for the covariates.
-        m_const = pm.Uninformative('m_const', value=0.)
+    # Make coefficients for the covariates.
+    m_const = pm.Uninformative('m_const', value=0.)
+    
+    covariate_dict = {}
+    for cname, cval in covariate_values.iteritems():
+        this_coef = pm.Uninformative(cname + '_coef', value=0.)
+        covariate_dict[cname] = (this_coef, cval)
+
+    inc = pm.CircVonMises('inc', 0,0)
+
+    @pm.stochastic(__class__ = pm.CircularStochastic, lo=0, hi=1)
+    def sqrt_ecc(value=.1):
+        return 0.
+    ecc = pm.Lambda('ecc', lambda s=sqrt_ecc: s**2)
+
+    amp = pm.Exponential('amp',.1,value=1.)
+
+    scale = pm.Exponential('scale',.1,value=1.)
+    
+    dd = pm.Uniform('dd',.5,3)
         
-        covariate_dict = {}
-        for cname, cval in covariate_values.iteritems():
-            this_coef = pm.Uninformative(cname + '_coef', value=0.)
-            covariate_dict[cname] = (this_coef, cval)
+    # The mean of the field
+    @pm.deterministic(trace=True)
+    def M(mc=m_const):
+        return pm.gp.Mean(lambda x: mc*np.ones(x.shape[0]))
+    
+    # The mean, evaluated  at the observation points, plus the covariates    
+    @pm.deterministic(trace=False)
+    def M_eval(M=M, lpm=logp_mesh, cv=covariate_dict):
+        out = M(lpm)
+        for c in cv.itervalues():
+            out += c[0]*c[1]
+        return out
 
-        V = pm.Exponential('V',.1,value=1.)
+    # A Deterministic valued as a Covariance object. Uses covariance my_st, defined above. 
+    @pm.deterministic(trace=True)
+    def C(amp=amp,scale=scale,inc=inc,ecc=ecc):
+        return pm.gp.FullRankCovariance(pm.gp.cov_funs.matern.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc, diff_degree=dd,n_threads=cpus)
 
-        inc = pm.CircVonMises('inc', 0,0)
+    # The evaluation of the Covariance object, plus the nugget.
+    @pm.deterministic(trace=False)
+    def C_eval(C=C):
+        return C(logp_mesh, logp_mesh)
+        
+    return locals()
 
-        @pm.stochastic(__class__ = pm.CircularStochastic, lo=0, hi=1)
-        def sqrt_ecc(value=.1):
+
+def basic_st_submodel(lon, lat, t, covariate_values, cpus):
+    
+    logp_mesh = combine_input_data(lon,lat,t)
+                
+    # Make coefficients for the covariates.
+    m_const = pm.Uninformative('m_const', value=0.)
+    t_coef = pm.Uninformative('t_coef',value=.1)        
+    covariate_dict = {}
+    for cname, cval in covariate_values.iteritems():
+        this_coef = pm.Uninformative(cname + '_coef', value=0.)
+        covariate_dict[cname] = (this_coef, cval)
+
+    inc = pm.CircVonMises('inc', 0,0)
+
+    @pm.stochastic(__class__ = pm.CircularStochastic, lo=0, hi=1)
+    def sqrt_ecc(value=.1):
+        return 0.
+    ecc = pm.Lambda('ecc', lambda s=sqrt_ecc: s**2)
+
+    # log_amp = pm.Uninformative('log_amp', value=0)
+    # amp = pm.Lambda('amp', lambda la = log_amp: np.exp(la))
+    amp = pm.Exponential('amp',.1,value=1.)
+
+    # log_scale = pm.Uninformative('log_scale', value=0)
+    # scale = pm.Lambda('scale', lambda ls = log_scale: np.exp(ls))
+    scale = pm.Exponential('scale',.1,value=1.)
+
+    # log_scale_t = pm.Uninformative('log_scale_t', value=0)
+    # scale_t = pm.Lambda('scale_t', lambda ls = log_scale_t: np.exp(ls))
+    scale_t = pm.Exponential('scale_t',.1,value=.1)
+    
+    @pm.stochastic(__class__ = pm.CircularStochastic, lo=0, hi=1)
+    def t_lim_corr(value=.2):
+        return 0.
+    ecc = pm.Lambda('ecc', lambda s=sqrt_ecc: s**2)
+
+    @pm.stochastic(__class__ = pm.CircularStochastic, lo=0, hi=1)
+    def sin_frac(value=.1):
+        return 0.
+    
+    if lockdown:
+        for p in [V, amp, scale, scale_t, t_lim_corr, sin_frac]:
+            p._observed=True
+
+    # The mean of the field
+    @pm.deterministic(trace=True)
+    def M(mc=m_const, tc=t_coef):
+        return pm.gp.Mean(st_mean_comp, m_const = mc, t_coef = tc)
+    
+    # The mean, evaluated  at the observation points, plus the covariates    
+    @pm.deterministic(trace=False)
+    def M_eval(M=M, lpm=logp_mesh, cv=covariate_dict):
+        out = M(lpm)
+        for c in cv.itervalues():
+            out += c[0]*c[1]
+        return out
+        
+    # A constraint on the space-time covariance parameters that ensures temporal correlations are 
+    # always between -1 and 1.
+    @pm.potential
+    def st_constraint(sd=.5, sf=sin_frac, tlc=t_lim_corr):    
+        if -sd >= 1./(-sf*(1-tlc)+tlc):
+            return -np.Inf
+        else:
             return 0.
-        ecc = pm.Lambda('ecc', lambda s=sqrt_ecc: s**2)
 
-        amp = pm.Exponential('amp',.1,value=1.)
+    # A Deterministic valued as a Covariance object. Uses covariance my_st, defined above. 
+    @pm.deterministic(trace=True)
+    def C(amp=amp,scale=scale,inc=inc,ecc=ecc,scale_t=scale_t, t_lim_corr=t_lim_corr, sin_frac=sin_frac):
+        return pm.gp.FullRankCovariance(my_st, amp=amp, scale=scale, inc=inc, ecc=ecc,st=scale_t, sd=.5,
+                                        tlc=t_lim_corr, sf = sin_frac, n_threads=cpus)
 
-        scale = pm.Exponential('scale',.1,value=1.)
-        
-        dd = pm.Uniform('dd',.5,3)
-            
-        # The mean of the field
-        @pm.deterministic(trace=True)
-        def M(mc=m_const):
-            return pm.gp.Mean(lambda x: mc*np.ones(x.shape[0]))
-        
-        # The mean, evaluated  at the observation points, plus the covariates    
-        @pm.deterministic(trace=False)
-        def M_eval(M=M, lpm=logp_mesh, cv=covariate_dict):
-            out = M(lpm)
-            for c in cv.itervalues():
-                out += c[0]*c[1]
-            return out
+    # The evaluation of the Covariance object, plus the nugget.
+    @pm.deterministic(trace=False)
+    def C_eval(C=C):
+        return C(logp_mesh, logp_mesh)
+                                   
 
-        # A Deterministic valued as a Covariance object. Uses covariance my_st, defined above. 
-        @pm.deterministic(trace=True)
-        def C(amp=amp,scale=scale,inc=inc,ecc=ecc):
-            return pm.gp.FullRankCovariance(pm.gp.cov_funs.matern.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc, diff_degree=dd,n_threads=cpus)
+class CovariateStepper(pm.StepMethod):
 
-        # The evaluation of the Covariance object, plus the nugget.
-        @pm.deterministic(trace=False)
-        def C_eval(C=C):
-            return C(logp_mesh, logp_mesh)
+    def __init__(self, covariate_dict, m_const, t, t_coef, M_eval, sig, d):
+        self.m_const = m_const
+        self.t_coef=t_coef
+        self.M = M_eval
+        self.sig = sig
+        self.d = d.value
+
+        cvv = covariate_dict.values()
+        self.beta = pm.Container([self.m_const, self.t_coef]+[v[0] for v in cvv])
+        self.x = np.vstack((np.ones((1,len(t))), np.atleast_2d(t), np.asarray([v[1] for v in cvv])))
+
+        pm.StepMethod.__init__(self, self.beta)
+
+    def step(self):
+
+        pri_sig = np.asarray(self.sig.value)
+        lo = pm.gp.trisolve(pri_sig, self.x.T, uplo='L').T
+        post_tau = np.dot(lo,lo.T)
+        l = np.linalg.cholesky(post_tau)
+
+        post_C = pm.gp.trisolve(l, np.eye(l.shape[0]),uplo='L')
+        post_C = pm.gp.trisolve(l.T, post_C, uplo='U')
+
+        post_mean = np.dot(lo, pm.gp.trisolve(pri_sig, self.d, uplo='L'))
+        post_mean = pm.gp.trisolve(l, post_mean, uplo='L')
+        post_mean = pm.gp.trisolve(l.T, post_mean, uplo='U')
+
+        new_val = pm.rmv_normal_cov(post_mean, post_C).squeeze()
+
+        [b.set_value(nv) for (b,nv) in zip(self.beta, new_val)]
+
                                     
 class FieldStepper(pm.StepMethod):
     """
