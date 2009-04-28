@@ -1,7 +1,17 @@
 import pymc as pm
 import numpy as np
+import time
 
 __all__ = ['FieldStepper', 'combine_spatial_inputs','combine_st_inputs','basic_spatial_submodel', 'basic_st_submodel']
+
+def spatial_mean(x, m_const):
+    return m_const*np.ones(x.shape[0])
+
+def st_mean_comp(x, m_const, t_coef):
+    lon = x[:,0]
+    lat = x[:,1]
+    t = x[:,2]
+    return m_const + t_coef * t
 
 def combine_spatial_inputs(lon,lat):
     # Convert latitude and longitude from degrees to radians.
@@ -42,7 +52,12 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
         this_coef = pm.Uninformative(cname + '_coef', value=0.)
         covariate_dict[cname] = (this_coef, cval)
 
-    inc = pm.CircVonMises('inc', 0,0)
+    # inc = pm.CircVonMises('inc', 0,0)
+    # @pm.stochastic(__class__ = pm.CircularStochastic, lo=-np.pi, hi=np.pi)
+    # def inc(value=0.):
+    #     return 0.
+    # inc = pm.Uniform('inc',-np.pi,np.pi,value=0,observed=True)
+    inc = 0
 
     @pm.stochastic(__class__ = pm.CircularStochastic, lo=0, hi=1)
     def sqrt_ecc(value=.1):
@@ -53,16 +68,14 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
 
     scale = pm.Exponential('scale',.1,value=1.)
     
-    dd = pm.Uniform('dd',.5,3)
-    
-    for s in [inc, sqrt_ecc, amp, scale, dd]:
+    for s in [sqrt_ecc, amp, scale]:
         if prior_params.has_key(s.__name__):
             s.parents.update(prior_params[s.__name__])
         
     # The mean of the field
     @pm.deterministic(trace=True)
     def M(mc=m_const):
-        return pm.gp.Mean(lambda x: mc*np.ones(x.shape[0]))
+        return pm.gp.Mean(spatial_mean, m_const=mc)
     
     # The mean, evaluated  at the observation points, plus the covariates    
     @pm.deterministic(trace=False)
@@ -74,8 +87,8 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
 
     # A Deterministic valued as a Covariance object. Uses covariance my_st, defined above. 
     @pm.deterministic(trace=True)
-    def C(amp=amp,scale=scale,inc=inc,ecc=ecc,diff_degree=dd):
-        return pm.gp.FullRankCovariance(pm.gp.cov_funs.matern.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc, diff_degree=diff_degree)
+    def C(amp=amp,scale=scale,inc=inc,ecc=ecc):
+        return pm.gp.FullRankCovariance(pm.gp.cov_funs.exponential.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc)
 
     # The evaluation of the Covariance object, plus the nugget.
     @pm.deterministic(trace=False)
@@ -130,7 +143,7 @@ def basic_st_submodel(lon, lat, t, covariate_values, cpus, prior_params={}):
             s.parents.update(prior_params[s.__name__])
 
     # The mean of the field
-    @pm.deterministic(trace=True)
+    @pm.deterministic
     def M(mc=m_const, tc=t_coef):
         return pm.gp.Mean(st_mean_comp, m_const = mc, t_coef = tc)
     
@@ -152,7 +165,7 @@ def basic_st_submodel(lon, lat, t, covariate_values, cpus, prior_params={}):
             return 0.
 
     # A Deterministic valued as a Covariance object. Uses covariance my_st, defined above. 
-    @pm.deterministic(trace=True)
+    @pm.deterministic
     def C(amp=amp,scale=scale,inc=inc,ecc=ecc,scale_t=scale_t, t_lim_corr=t_lim_corr, sin_frac=sin_frac):
         return pm.gp.FullRankCovariance(my_st, amp=amp, scale=scale, inc=inc, ecc=ecc,st=scale_t, sd=.5,
                                         tlc=t_lim_corr, sf = sin_frac, n_threads=cpus)
@@ -218,7 +231,7 @@ class FieldStepper(pm.StepMethod):
         
         self.scratch1 = np.asmatrix(np.empty(self.C_eval.value.shape, order='F'))
         self.scratch2 = np.asmatrix(np.empty(self.C_eval.value.shape, order='F'))
-        self.scratch3 = np.empty(self.M_eval.value.shape)      
+        self.scratch3 = np.empty(self.M_eval.value.shape)     
 
         self.jump_tau = jump_tau
         if self.jump_tau:

@@ -23,6 +23,8 @@ lpm = hf.root.metadata.logp_mesh
 comps = ['lon','lat','t']
 for i in xrange(3):
     lpm[:,i].tofile(comps[i]+'.txt',sep=',')
+indices_to_keep = hf.root.metadata.ui
+indices_to_keep.tofile('indices_to_keep.txt', sep=',')
 
 # Write in the traces
 for n in hr.colnames:
