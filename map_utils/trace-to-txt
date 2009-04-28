@@ -3,6 +3,7 @@
 import tables as tb
 import numpy as np
 import os,sys
+import pylab as pl
 
 dbfile = sys.argv[1]
 burn = int(sys.argv[2])
@@ -18,13 +19,21 @@ ind = np.array(np.linspace(burn, len(hr)-1, 500), dtype=int)
 os.mkdir(dbname)
 os.chdir(dbname)
 
+
 # Write in longitude, latitude and time
-lpm = hf.root.metadata.logp_mesh
+indices_to_keep = hf.root.metadata.ui
+indices_to_keep.tofile('indices_to_keep.txt', sep=',')
+
+lpm = hf.root.metadata.logp_mesh[indices_to_keep]
 comps = ['lon','lat','t']
 for i in xrange(3):
     lpm[:,i].tofile(comps[i]+'.txt',sep=',')
-indices_to_keep = hf.root.metadata.ui
-indices_to_keep.tofile('indices_to_keep.txt', sep=',')
+
+urb = hf.root.metadata.urb[indices_to_keep]
+periurb = hf.root.metadata.periurb[indices_to_keep]
+urb_cls = 1+periurb+2.*urb
+urb_cls.tofile('urb_cls.txt',sep=',')
+
 
 # Write in the traces
 for n in hr.colnames:
@@ -43,6 +52,22 @@ for n in hr.colnames:
     # Scalar-valued variables' traces
     else:
         col[:][ind].tofile(n+'.txt',sep=',')
+        
+
+# Write in bits of the input file
+cont = dbname.split('_')[0]
+def cont_to_fname(cont):
+    if cont.find('Thin')>-1:
+        kept=True
+    cont_abbrv = cont[:2].upper()
+    fname = 'pts_metadata_%s.txt'%cont_abbrv
+    if kept:
+        fname = 'kept_'+fname
+    return fname
+    
+inputs = csv2rec(fname)
+for col in ['pfpr','pfpr210','n','npos','npos210']:
+    inputs[col][indices_to_keep].tofile(col.upper()+'.txt')
     
 # Zip and return    
 os.chdir('..')
