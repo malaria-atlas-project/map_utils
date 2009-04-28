@@ -65,7 +65,7 @@ def cont_to_fname(cont):
         fname = 'kept_'+fname
     return fname
     
-inputs = csv2rec(fname)
+inputs = pl.csv2rec(fname)
 for col in ['pfpr','pfpr210','n','npos','npos210']:
     inputs[col][indices_to_keep].tofile(col.upper()+'.txt')
     
