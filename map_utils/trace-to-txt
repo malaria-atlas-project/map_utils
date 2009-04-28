@@ -55,7 +55,7 @@ for n in hr.colnames:
         
 
 # Write in bits of the input file
-cont = dbname.split('_')[0]
+cont = dbname.split('_')[1]
 def cont_to_fname(cont):
     if cont.find('Thin')>-1:
         kept=True
