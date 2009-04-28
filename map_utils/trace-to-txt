@@ -59,6 +59,8 @@ cont = dbname.split('_')[0]
 def cont_to_fname(cont):
     if cont.find('Thin')>-1:
         kept=True
+    else:
+        kept=False
     cont_abbrv = cont[:2].upper()
     fname = 'pts_metadata_%s.txt'%cont_abbrv
     if kept:
