@@ -29,7 +29,10 @@ comps = ['lon','lat','t']
 for i in xrange(3):
     lpm[:,i].tofile(comps[i]+'.txt',sep=',')
 
-urb = hf.root.metadata.urb[:][indices_to_keep]
+try:
+    urb = hf.root.metadata.urb[:][indices_to_keep]
+except:
+    urb = 0
 periurb = hf.root.metadata.periurb[:][indices_to_keep]
 urb_cls = 1+periurb+2.*urb
 urb_cls.tofile('urb_cls.txt',sep=',')
