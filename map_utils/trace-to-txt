@@ -68,7 +68,7 @@ def cont_to_fname(cont):
     return fname
 
 print os.listdir('.')    
-inputs = pl.csv2rec(cont_to_fname(cont))
+inputs = pl.csv2rec('../'+cont_to_fname(cont))
 for col in ['pfpr','pfpr210','n','npos','npos210']:
     inputs[col][indices_to_keep].tofile(col.upper()+'.txt')
     
