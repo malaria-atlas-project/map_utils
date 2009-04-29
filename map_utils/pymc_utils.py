@@ -52,12 +52,7 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
         this_coef = pm.Uninformative(cname + '_coef', value=0.)
         covariate_dict[cname] = (this_coef, cval)
 
-    # inc = pm.CircVonMises('inc', 0,0)
-    # @pm.stochastic(__class__ = pm.CircularStochastic, lo=-np.pi, hi=np.pi)
-    # def inc(value=0.):
-    #     return 0.
-    # inc = pm.Uniform('inc',-np.pi,np.pi,value=0,observed=True)
-    inc = 0
+    inc = pm.CircVonMises('inc', 0,0)
 
     @pm.stochastic(__class__ = pm.CircularStochastic, lo=0, hi=1)
     def sqrt_ecc(value=.1):
@@ -89,12 +84,14 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
     @pm.deterministic(trace=True)
     def C(amp=amp,scale=scale,inc=inc,ecc=ecc):
         return pm.gp.FullRankCovariance(pm.gp.cov_funs.exponential.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc)
-
+    
     # The evaluation of the Covariance object, plus the nugget.
     @pm.deterministic(trace=False)
     def C_eval(C=C):
-        return C(logp_mesh, logp_mesh)
-        
+        """THIS LEAKS MEMORY"""
+        out = C(logp_mesh, logp_mesh)
+        return out
+    
     return locals()
 
 
