@@ -2,7 +2,7 @@ import pymc as pm
 import numpy as np
 import time
 
-__all__ = ['FieldStepper', 'combine_spatial_inputs','combine_st_inputs','basic_spatial_submodel', 'basic_st_submodel']
+__all__ = ['FieldStepper', 'combine_spatial_inputs','combine_st_inputs','basic_spatial_submodel', 'basic_st_submodel','st_mean_comp']
 
 def spatial_mean(x, m_const):
     return m_const*np.ones(x.shape[0])
