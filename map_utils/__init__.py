@@ -39,11 +39,25 @@ def grid_convert(g, frm, to, validate=False):
     # Transpose if necessary
     if not frm[0]==to[0]:
         g = g.T
-        to = to[2:]+to[:2]
-        
-    if not frm[1]==to[1]:
+                
+    first_dir = to[1]
+    if not first_dir == frm[frm.find(to[0])+1]:
+        # print 'First mismatch'
         g=g[::-1,:]
-    if not frm[3]==to[3]:
+        
+    sec_dir = to[3]
+    if not sec_dir == frm[frm.find(to[2])+1]:
+        # print 'Second mismatch'
         g=g[:,::-1]
+        
+    # print first_dir, sec_dir
     return g
 
+if __name__ == '__main__':
+    from numpy import *
+    a = arange(6)
+    A = outer(a,a>3)
+    A1 = grid_convert(A,'y-x+','x+y+')
+    A2 = grid_convert(A1,'x+y+','y-x-')
+    A3 = grid_convert(A,'y-x+','y-x-')
+    print A2==A3

@@ -61,7 +61,9 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
 
     amp = pm.Exponential('amp',.1,value=1.)
 
-    scale = pm.Exponential('scale',.1,value=1.)
+    scale_shift = pm.Exponential('scale_shift',.1,value=1.)
+    scale = pm.Lambda('scale',lambda ss=scale_shift:ss+.1)
+    
     
     for s in [sqrt_ecc, amp, scale]:
         if prior_params.has_key(s.__name__):
@@ -85,10 +87,13 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
     def C(amp=amp,scale=scale,inc=inc,ecc=ecc):
         return pm.gp.FullRankCovariance(pm.gp.cov_funs.exponential.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc)
     
+    # @pm.deterministic(trace=True)
+    # def C(amp=amp,scale=scale):
+    #     return pm.gp.FullRankCovariance(pm.gp.cov_funs.exponential.geo_rad, amp=amp, scale=scale)
+    
     # The evaluation of the Covariance object, plus the nugget.
     @pm.deterministic(trace=False)
     def C_eval(C=C):
-        """THIS LEAKS MEMORY"""
         out = C(logp_mesh, logp_mesh)
         return out
     
