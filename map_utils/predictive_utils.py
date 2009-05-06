@@ -4,6 +4,8 @@ import numpy as np
 from exportAscii import asc_to_ndarray, get_header, exportAscii
 from scipy import ndimage, mgrid
 
+__all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc']
+
 def validate_format_str(st):
     for i in [0,2]:
         if not st[i] in ['x','y']:
@@ -107,7 +109,7 @@ def hdf5_to_samps(chain, x, burn, thin, total, fns, nugname=None, postproc=None,
             Sofar may be None.
             The functions will be applied according to the reduce pattern.
         nugname : string (optional)
-            The name of the hdf5 node giving the nugget varuance
+            The name of the hdf5 node giving the nugget variance
         postproc : function (optional)
             This function is applied to the realization before it is passed to
             the fns.
