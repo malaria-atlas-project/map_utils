@@ -1,19 +1,20 @@
 import numpy as np
 import string
 
-__all__ = ['asc_to_ndarray','exportAscii']
+__all__ = ['asc_to_ndarray','exportAscii', 'get_header']
 
-def asc_to_ndarray(fname, path='./'):
-    """
-    Extracts long, lat, data from an ascii-format file.
-    Data is a masked array if the header contains NODATA_value
+def get_header(fname, path='./'):
+    """"
+    Parses an ascii file's header to a dictionary.
+    Returns it along with the rest of the file.
     """
     f = file(path+fname,'r')
     
     header = {}
     
     while True:
-        clean_line = string.strip(f.readline()).split(' ')
+        line = f.readline()
+        clean_line = string.strip(line).split()
         key = string.strip(clean_line[0])
         val = string.strip(clean_line[-1])
         if not key[0].isalpha():
@@ -28,16 +29,24 @@ def asc_to_ndarray(fname, path='./'):
     for key in ['ncols','nrows','cellsize','xllcorner','yllcorner']:
         if not header.has_key(key):
             raise KeyError, 'File %s header does not contain key %s'%(path+fname, key)
-
+    
+    return header, f
+    
+def asc_to_ndarray(fname, path='./'):
+    """
+    Extracts long, lat, data from an ascii-format file.
+    Data is a masked array if the header contains NODATA_value
+    """
+    header, f = get_header(fname, path)
+    
     ncols = header['ncols']
     nrows = header['nrows']
     cellsize = header['cellsize']
     
     long = header['xllcorner'] + np.arange(ncols) * cellsize
     lat = header['yllcorner'] + np.arange(nrows) * cellsize
-    data = np.zeros((nrows, ncols),dtype=float)
-    for i in xrange(nrows):
-        data[i,:] = np.fromstring(f.readline(), dtype=float, sep=' ')
+    data = np.loadtxt(f)
+    f.close()
     
     data = data[::-1,:]
     if header.has_key('NODATA_value'):
