@@ -186,9 +186,6 @@ def vec_to_asc(vec, fname, out_fname, unmasked, path='./'):
     
     out_conv = grid_convert(out,'x+y+','y-x+')
     
-    from IPython.Debugger import Pdb
-    Pdb(color_scheme='Linux').set_trace()   
-    
     header['NODATA_value'] = -9999
     exportAscii(out_conv.data,out_fname,header,True-out_conv.mask)
     
@@ -198,7 +195,7 @@ def vec_to_asc(vec, fname, out_fname, unmasked, path='./'):
 if __name__ == '__main__':
     from pylab import *
     import matplotlib
-    x, unmasked = asc_to_locs('frame3_10k.asc.txt',thin=10, bufsize=3)    
+    x, unmasked = asc_to_locs('frame3_10k.asc.txt',thin=50, bufsize=3)    
     # matplotlib.interactive('False')
     # plot(x[:,0],x[:,1],'k.',markersize=1)
     # show()
@@ -211,7 +208,7 @@ if __name__ == '__main__':
         std = np.sqrt(var)
         return {'mean': mean, 'var': var, 'std': std}
     
-    products = hdf5_to_samps(ch,x,1000,400,50000,[mean_reduce, var_reduce], 'V', invlogit, finalize)
+    products = hdf5_to_samps(ch,x,1000,400,5000,[mean_reduce, var_reduce], 'V', invlogit, finalize)
 
     mean_surf = vec_to_asc(products['mean'],'frame3_10k.asc.txt','ihd_mean.asc',unmasked)
     std_surf = vec_to_asc(products['std'],'frame3_10k.asc.txt','ihd_std.asc',unmasked)
