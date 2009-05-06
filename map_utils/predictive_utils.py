@@ -91,7 +91,7 @@ def invlogit(x):
     """A shape-preserving version of PyMC's invlogit."""
     return pm.invlogit(x.ravel()).reshape(x.shape)
 
-def hdf5_to_samps(chain, x, burn, thin, total, fns, nugname=None, postproc=None, finalize=None):
+def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, nugname=None, postproc=None, finalize=None):
     """
     Parameters:
         chain : PyTables node
@@ -127,7 +127,7 @@ def hdf5_to_samps(chain, x, burn, thin, total, fns, nugname=None, postproc=None,
     f = cols.f
     M = chain.group0.M
     C = chain.group0.C
-    x_obs = hf.root.metadata.logp_mesh[:]
+    x_obs = metadata.logp_mesh[:]
     
     for i in iter:
         print i
@@ -212,6 +212,7 @@ if __name__ == '__main__':
     # show()
     hf = tb.openFile('ibd_loc_all_030509.csv.hdf5')
     ch = hf.root.chain0
+    meta=hf.root.metadata
     
     def finalize(prod, n):
         mean = prod[mean_reduce] / n
@@ -220,7 +221,7 @@ if __name__ == '__main__':
         std_to_mean = std/mean
         return {'mean': mean, 'var': var, 'std': std, 'std-to-mean':std_to_mean}
     
-    products = hdf5_to_samps(ch,x,1000,400,5000,[mean_reduce, var_reduce], 'V', invlogit, finalize)
+    products = hdf5_to_samps(ch,meta,x,1000,400,5000,[mean_reduce, var_reduce], 'V', invlogit, finalize)
 
     mean_surf = vec_to_asc(products['mean'],'frame3_10k.asc.txt','ihd-mean.asc',unmasked)
     std_surf = vec_to_asc(products['std-to-mean'],'frame3_10k.asc.txt','ihd-std-to-mean.asc',unmasked)
