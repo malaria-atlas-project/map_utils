@@ -4,7 +4,7 @@ import numpy as np
 from exportAscii import asc_to_ndarray, get_header, exportAscii
 from scipy import ndimage, mgrid
 
-__all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc']
+__all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs']
 
 def validate_format_str(st):
     for i in [0,2]:
