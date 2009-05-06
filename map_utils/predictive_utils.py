@@ -41,12 +41,10 @@ def grid_convert(g, frm, to, validate=False):
                 
     first_dir = to[1]
     if not first_dir == frm[frm.find(to[0])+1]:
-        # print 'First mismatch'
         g=g[::-1,:]
         
     sec_dir = to[3]
     if not sec_dir == frm[frm.find(to[2])+1]:
-        # print 'Second mismatch'
         g=g[:,::-1]
         
     # print first_dir, sec_dir
@@ -65,9 +63,7 @@ def buffer(arr, n=5):
 def asc_to_locs(fname, path='./', thin=1, bufsize=1):
     """Converts an ascii grid to a list of locations where prediction is desired."""
     lon,lat,data = asc_to_ndarray(fname,path)
-    
     data = grid_convert(data,'y-x+','x+y+')
-    
     unmasked = buffer(True-data[::thin,::thin].mask, n=bufsize)
     
     # unmasked = None
@@ -175,6 +171,7 @@ def vec_to_asc(vec, fname, out_fname, unmasked, path='./'):
     header, f = get_header(fname,path)
     f.close()
     lon,lat,data = asc_to_ndarray(fname,path)
+    data = grid_convert(data,'y-x+','x+y+')
     data_thin = np.empty(unmasked.shape)
     data_thin[unmasked] = vec
     
@@ -183,6 +180,18 @@ def vec_to_asc(vec, fname, out_fname, unmasked, path='./'):
     normalize_for_mapcoords(mapgrid[1], data_thin.shape[1]-1)
     
     out = np.ma.masked_array(ndimage.map_coordinates(data_thin, mapgrid), mask=data.mask)
+    
+    # import pylab as pl
+    # pl.close('all')
+    # pl.figure()
+    # pl.imshow(out, interpolation='nearest', vmin=0.)
+    # pl.colorbar()
+    # pl.title('Resampled')
+    # 
+    # pl.figure()
+    # pl.imshow(np.ma.masked_array(data_thin, mask=True-unmasked), interpolation='nearest', vmin=0)
+    # pl.colorbar()
+    # pl.title('Original')
     
     out_conv = grid_convert(out,'x+y+','y-x+')
     
@@ -195,7 +204,7 @@ def vec_to_asc(vec, fname, out_fname, unmasked, path='./'):
 if __name__ == '__main__':
     from pylab import *
     import matplotlib
-    x, unmasked = asc_to_locs('frame3_10k.asc.txt',thin=50, bufsize=3)    
+    x, unmasked = asc_to_locs('frame3_10k.asc.txt',thin=20, bufsize=3)    
     # matplotlib.interactive('False')
     # plot(x[:,0],x[:,1],'k.',markersize=1)
     # show()
@@ -206,10 +215,11 @@ if __name__ == '__main__':
         mean = prod[mean_reduce] / n
         var = prod[var_reduce] / n - mean**2
         std = np.sqrt(var)
-        return {'mean': mean, 'var': var, 'std': std}
+        std_to_mean = std/mean
+        return {'mean': mean, 'var': var, 'std': std, 'std-to-mean':std_to_mean}
     
     products = hdf5_to_samps(ch,x,1000,400,5000,[mean_reduce, var_reduce], 'V', invlogit, finalize)
 
-    mean_surf = vec_to_asc(products['mean'],'frame3_10k.asc.txt','ihd_mean.asc',unmasked)
-    std_surf = vec_to_asc(products['std'],'frame3_10k.asc.txt','ihd_std.asc',unmasked)
+    mean_surf = vec_to_asc(products['mean'],'frame3_10k.asc.txt','ihd-mean.asc',unmasked)
+    std_surf = vec_to_asc(products['std-to-mean'],'frame3_10k.asc.txt','ihd-std-to-mean.asc',unmasked)
     

@@ -32,6 +32,7 @@ def get_header(fname, path='./'):
     
     return header, f
     
+
 def asc_to_ndarray(fname, path='./'):
     """
     Extracts long, lat, data from an ascii-format file.
@@ -45,10 +46,13 @@ def asc_to_ndarray(fname, path='./'):
     
     long = header['xllcorner'] + np.arange(ncols) * cellsize
     lat = header['yllcorner'] + np.arange(nrows) * cellsize
-    data = np.loadtxt(f)
+    data = np.zeros((nrows, ncols), dtype=float)
+    for i in xrange(nrows):
+        line = f.readline()
+        data[i,:] = np.fromstring(line, dtype=float, sep=' ')
+    # print data.shape, nrows, ncols
     f.close()
     
-    data = data[::-1,:]
     if header.has_key('NODATA_value'):
         data = np.ma.masked_array(data, mask=data==header['NODATA_value'])
     
@@ -81,4 +85,5 @@ def exportAscii (arr,filename,headerDict,mask=0):
             arr[mask==0]=headerDict['NODATA_value'] 
 
     np.savetxt(f, arr)
+
     f.close()
