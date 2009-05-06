@@ -1,3 +1,51 @@
+import numpy as np
+import string
+
+__all__ = ['asc_to_ndarray','exportAscii']
+
+def asc_to_ndarray(fname, path='./'):
+    """
+    Extracts long, lat, data from an ascii-format file.
+    Data is a masked array if the header contains NODATA_value
+    """
+    f = file(path+fname,'r')
+    
+    header = {}
+    
+    while True:
+        clean_line = string.strip(f.readline()).split(' ')
+        key = string.strip(clean_line[0])
+        val = string.strip(clean_line[-1])
+        if not key[0].isalpha():
+            break
+        try:
+            val = int(val)
+        except:
+            val = float(val)
+        header[key] = val
+    
+
+    for key in ['ncols','nrows','cellsize','xllcorner','yllcorner']:
+        if not header.has_key(key):
+            raise KeyError, 'File %s header does not contain key %s'%(path+fname, key)
+
+    ncols = header['ncols']
+    nrows = header['nrows']
+    cellsize = header['cellsize']
+    
+    long = header['xllcorner'] + np.arange(ncols) * cellsize
+    lat = header['yllcorner'] + np.arange(nrows) * cellsize
+    data = np.zeros((nrows, ncols),dtype=float)
+    for i in xrange(nrows):
+        data[i,:] = np.fromstring(f.readline(), dtype=float, sep=' ')
+    
+    data = data[::-1,:]
+    if header.has_key('NODATA_value'):
+        data = np.ma.masked_array(data, mask=data==header['NODATA_value'])
+    
+    return long, lat, data
+
+
 def exportAscii (arr,filename,headerDict,mask=0):
 
     import numpy as np
