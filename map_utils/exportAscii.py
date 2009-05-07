@@ -1,7 +1,7 @@
 import numpy as np
 import string
 
-__all__ = ['asc_to_ndarray','exportAscii', 'get_header']
+__all__ = ['asc_to_ndarray','exportAscii', 'get_header', 'reexport_ascii']
 
 def get_header(fname, path='./'):
     """"
@@ -58,6 +58,17 @@ def asc_to_ndarray(fname, path='./'):
     
     return long, lat, data
 
+def reexport_ascii(fname, path='./'):
+    """
+    Useful if, for example, the generated ascii file doesn't have 
+    Windows returns.
+    """
+    header, f = get_header(fname, path)
+    f.close()
+    
+    long, lat, data = asc_to_ndarray(fname, path)
+    
+    exportAscii(data.data, fname, header, True-data.mask)
 
 def exportAscii (arr,filename,headerDict,mask=0):
 
@@ -67,12 +78,12 @@ def exportAscii (arr,filename,headerDict,mask=0):
     f = file(filename,"w")
     
     # write in header
-    f.write('ncols\t'+str(headerDict['ncols'])+'\n')
-    f.write('nrows\t'+str(headerDict['nrows'])+'\n')
-    f.write('xllcorner\t'+str(headerDict['xllcorner'])+'\n')
-    f.write('yllcorner\t'+str(headerDict['yllcorner'])+'\n')
-    f.write('cellsize\t'+str(headerDict['cellsize'])+'\n')
-    f.write('NODATA_value\t'+str(headerDict['NODATA_value'])+'\n')
+    f.write('ncols\t'+str(headerDict['ncols'])+'\r\n')
+    f.write('nrows\t'+str(headerDict['nrows'])+'\r\n')
+    f.write('xllcorner\t'+str(headerDict['xllcorner'])+'\r\n')
+    f.write('yllcorner\t'+str(headerDict['yllcorner'])+'\r\n')
+    f.write('cellsize\t'+str(headerDict['cellsize'])+'\r\n')
+    f.write('NODATA_value\t'+str(headerDict['NODATA_value'])+'\r\n')
     
     # write in main array
     
@@ -84,6 +95,8 @@ def exportAscii (arr,filename,headerDict,mask=0):
         else:
             arr[mask==0]=headerDict['NODATA_value'] 
 
-    np.savetxt(f, arr)
+    for row in arr:
+        row.tofile(f, sep=' ')
+        f.write('\r\n')
 
     f.close()

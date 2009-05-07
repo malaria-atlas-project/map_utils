@@ -62,7 +62,9 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
     amp = pm.Exponential('amp',.1,value=1.)
 
     scale_shift = pm.Exponential('scale_shift',.1,value=1.)
-    scale = pm.Lambda('scale',lambda ss=scale_shift:ss+.1)
+    scale = pm.Lambda('scale',lambda ss=scale_shift:ss+.01)
+    
+    diff_degree = pm.Uniform('diff_degree',.01,3)
     
     
     for s in [sqrt_ecc, amp, scale]:
@@ -83,14 +85,14 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
         return out
 
     # A Deterministic valued as a Covariance object. Uses covariance my_st, defined above. 
-    @pm.deterministic(trace=True)
-    def C(amp=amp,scale=scale,inc=inc,ecc=ecc):
-        return pm.gp.FullRankCovariance(pm.gp.cov_funs.exponential.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc)
-    
     # @pm.deterministic(trace=True)
-    # def C(amp=amp,scale=scale):
-    #     return pm.gp.FullRankCovariance(pm.gp.cov_funs.exponential.geo_rad, amp=amp, scale=scale)
+    # def C(amp=amp,scale=scale,inc=inc,ecc=ecc):
+    #     return pm.gp.FullRankCovariance(pm.gp.cov_funs.exponential.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc)
     
+    @pm.deterministic(trace=True)
+    def C(amp=amp,scale=scale,inc=inc,ecc=ecc,diff_degree=diff_degree):
+        return pm.gp.FullRankCovariance(pm.gp.cov_funs.matern.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc, diff_degree=diff_degree)
+                
     # The evaluation of the Covariance object, plus the nugget.
     @pm.deterministic(trace=False)
     def C_eval(C=C):

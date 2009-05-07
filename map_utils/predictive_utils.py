@@ -4,7 +4,7 @@ import numpy as np
 from exportAscii import asc_to_ndarray, get_header, exportAscii
 from scipy import ndimage, mgrid
 
-__all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs']
+__all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs','display_asc','display_datapoints']
 
 def validate_format_str(st):
     for i in [0,2]:
@@ -55,6 +55,8 @@ def grid_convert(g, frm, to, validate=False):
 def buffer(arr, n=5):
     """Creates an n-pixel buffer in all directions."""
     out = arr.copy()
+    if n==0:
+        return out
     for i in xrange(1,n+1):
         out[i:,:] += arr[:-i,:]
         out[:-i,:] += arr[i:,:]
@@ -72,6 +74,24 @@ def asc_to_locs(fname, path='./', thin=1, bufsize=1):
     lat,lon = [dir[unmasked] for dir in np.meshgrid(lat[::thin],lon[::thin])]
     # lon,lat = [dir.ravel() for dir in np.meshgrid(lon[::thin],lat[::thin])]
     return np.vstack((lon,lat)).T*np.pi/180., unmasked
+    
+def display_asc(fname, path='./', radians=True, *args, **kwargs):
+    """Displays an ascii file as a pylab image."""
+    from pylab import imshow
+    lon,lat,data = asc_to_ndarray(fname,path)
+    if radians:
+        lon *= np.pi/180.
+        lat *= np.pi/180.
+    imshow(grid_convert(data,'y-x+','y+x+'),extent=[lon.min(),lon.max(),lat.min(),lat.max()],*args,**kwargs)
+    
+def display_datapoints(h5file, path='./', cmap=None, *args, **kwargs):
+    """Adds as hdf5 archive's logp-mesh to an image."""
+    hf = tb.openFile(path+h5file)
+    lpm = hf.root.metadata.logp_mesh[:]
+    hf.close()
+    from pylab import plot
+    if cmap is None:
+        plot(lpm[:,0],lpm[:,1],*args,**kwargs)
         
 def mean_reduce(sofar, next):
     """A function to be used with hdf5_to_samps"""
@@ -129,6 +149,16 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, nugname=None, post
     C = chain.group0.C
     x_obs = metadata.logp_mesh[:]
     
+    # Avoid memory errors
+    max_chunksize = 1.e8 / x_obs.shape[0]
+    n_chunks = int(x.shape[0]/max_chunksize+1)
+    splits = np.array(np.linspace(0,x.shape[0],n_chunks+1)[1:-1],dtype='int')
+    x_chunks = np.split(x,splits)
+    i_chunks = np.split(np.arange(x.shape[0]), splits)
+    
+    M_pred = np.empty(x.shape[0])
+    V_pred = np.empty(x.shape[0])
+    
     for i in iter:
         print i
         
@@ -139,8 +169,9 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, nugname=None, post
         pm.gp.observe(M,C,x_obs,f)
         
         # Mean and covariance of process
-        M_pred = M(x)
-        V_pred = C(x)
+        for j in xrange(n_chunks):
+            M_pred[i_chunks[j]] = M(x_chunks[j])
+            V_pred[i_chunks[j]] = C(x_chunks[j])
         if nugname is not None:
             V_pred += getattr(cols, nugname)[i]
         S_pred = np.sqrt(V_pred)
