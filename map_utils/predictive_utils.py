@@ -3,8 +3,9 @@ import tables as tb
 import numpy as np
 from exportAscii import asc_to_ndarray, get_header, exportAscii
 from scipy import ndimage, mgrid
+from histogram_utils import *
 
-__all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs','display_asc','display_datapoints']
+__all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs','display_asc','display_datapoints','histogram_reduce','histogram_finalize']
 
 def validate_format_str(st):
     for i in [0,2]:
@@ -106,6 +107,29 @@ def var_reduce(sofar, next):
         return next**2
     else:
         return sofar + next**2
+
+def histogram_reduce(bins, binfn, x):
+    """Produces an accumulator to be used with hdf5_to_samps"""
+    xind, yind = np.meshgrid(arange(x.shape[0]), arange(x.shape[1]))
+    def hr(sofar, next, xind=xind, yind=yind):
+        if sofar is None:
+            sofar = np.zeros((len(bins),)+next.shape, dtype=int)
+        # Call to Fortran function multiinc
+        multiinc(sofar,binfn(next))
+        return sofar
+    return hr
+        
+def histogram_finalize(bins, q):
+    """Converts accumulated histogram raster to desired quantiles"""
+    def fin(products, n, bins=bins, q=q):
+        out = {}
+        hist = products['hist']
+        # Call to Fortran function qextract
+        quantile_surfs = qextract(hist,n,q,bins)
+        for i in xrange(len(q)):
+            out['quantile_%f'%q[i]] = quantile_surfs[i]
+        return out
+    return fin
 
 def invlogit(x):
     """A shape-preserving version of PyMC's invlogit."""

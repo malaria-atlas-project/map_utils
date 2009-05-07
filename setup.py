@@ -8,6 +8,8 @@ from numpy.distutils.misc_util import Configuration
 import os
 config = Configuration('map_utils',parent_package=None,top_path=None)
 
+config.add_extension(name='histogram_utils',sources=['map_utils/histogram_utils.f'])
+
 if __name__ == '__main__':
     from numpy.distutils.core import setup
     setup(  version="0.1",
