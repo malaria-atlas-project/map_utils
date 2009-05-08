@@ -108,26 +108,31 @@ def var_reduce(sofar, next):
     else:
         return sofar + next**2
 
-def histogram_reduce(bins, binfn, x):
+def histogram_reduce(bins, binfn):
     """Produces an accumulator to be used with hdf5_to_samps"""
-    xind, yind = np.meshgrid(arange(x.shape[0]), arange(x.shape[1]))
-    def hr(sofar, next, xind=xind, yind=yind):
+    def hr(sofar, next):
         if sofar is None:
-            sofar = np.zeros((len(bins),)+next.shape, dtype=int)
+            sofar = np.zeros(next.shape+(len(bins),), dtype=int, order='F')
         # Call to Fortran function multiinc
-        multiinc(sofar,binfn(next))
+        ind = binfn(next)
+        # print 'multiinc called, number is %i'%np.sum(sofar)
+        multiinc(sofar,ind)
+        # print 'Done, number is %i'%np.sum(sofar)
+        # print
         return sofar
     return hr
         
-def histogram_finalize(bins, q):
+def histogram_finalize(bins, q, hr):
     """Converts accumulated histogram raster to desired quantiles"""
-    def fin(products, n, bins=bins, q=q):
+    def fin(products, n, bins=bins, q=q, hr=hr):
         out = {}
-        hist = products['hist']
+        hist = products[hr]
         # Call to Fortran function qextract
         quantile_surfs = qextract(hist,n,q,bins)
         for i in xrange(len(q)):
-            out['quantile_%f'%q[i]] = quantile_surfs[i]
+            out['quantile_%s'%q[i]] = quantile_surfs[i]
+        # from IPython.Debugger import Pdb
+        # Pdb(color_scheme='Linux').set_trace()   
         return out
     return fin
 
