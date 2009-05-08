@@ -63,7 +63,7 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
 
     amp = pm.Exponential('amp',.1,value=1.)
 
-    scale_shift = pm.Exponential('scale_shift',.1,value=1.)
+    scale_shift = pm.Exponential('scale_shift',1./.08,value=1./.08)
     scale = pm.Lambda('scale',lambda ss=scale_shift:ss+.01)
     
     diff_degree = pm.Uniform('diff_degree',.01,3)
