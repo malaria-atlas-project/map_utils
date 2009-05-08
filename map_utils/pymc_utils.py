@@ -8,6 +8,9 @@ __all__ = ['FieldStepper', 'CovariateStepper', 'combine_spatial_inputs','combine
 
 def spatial_mean(x, m_const):
     return m_const*np.ones(x.shape[0])
+    
+def zero_mean(x):
+    return np.zeros(x.shape[:-1])
 
 def st_mean_comp(x, m_const, t_coef):
     lon = x[:,0]
@@ -36,7 +39,82 @@ def combine_st_inputs(lon,lat,t):
     data_mesh = np.vstack((lon, lat, t)).T 
     return data_mesh
     
-def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
+def add_standard_metadata(M, logp_mesh, covariate_dict, data_mesh=None, **others):
+    """
+    Adds the standard metadata to an hdf5 archive.
+    """
+    hf = M.db._h5file
+    hf.createGroup('/','metadata')
+    
+    weird_attrs = ['ti','vars_to_writeout','scale_params','amp_params']
+    
+    hf.createArray(hf.root.metadata, 'logp_mesh', logp_mesh[:])
+    if data_mesh is not None:
+        hf.createArray(hf.root.metadata, 'data_mesh', data_mesh[:])
+        
+    hf.createGroup(hf.root.metadata, 'covariates')
+    for name, valvar in covariate_dict.itervalues():
+        val, var = valvar
+        g = hf.createGroup(hf.root.metadata.covariates, name)
+        hf.createArray(g,'input_values',val)
+        hf.createArray(g,'prior_variance',var)
+        
+    for name, val in others:
+        if name in weird_attrs:
+            vla=hf.createVLArray(hf.root.metadata, name, ObjectAtom())
+            vla.append(val)
+        else:
+            hf.createArray(hf.root.metadata, name, val)    
+    
+def cd_and_C_eval(covariate_values, C, logp_mesh, fac=1e6):
+    """
+    Returns a {name: value, prior variance} dictionary
+    and an evaluated covariance with covariates incorporated.
+    """
+    covariate_dict = {}
+    # Set prior variances of covariate coefficients. They're huge, and scaled.
+    means = []
+
+    # Possibly account for the mean of time.
+    if logp_mesh.shape[1]==3:
+        means.append(np.mean(logp_mesh[:,-1]))
+        covariate_dict['t'] = (logp_mesh[:,-1], np.var(logp_mesh[:,-1])*fac)
+        
+    for cname, cval in covariate_values.iteritems():
+        cov_var = np.var(cval)
+        cov_mean = np.mean(cval)
+        means.append(cov_mean)
+        covariate_dict[cname] = (cval, cov_var*fac)
+        
+    # Constant term
+    covariate_dict['m'] = (np.ones(logp_mesh.shape[0]), (np.sum(np.array(means)**2) + 1)*fac)
+                    
+    # The evaluation of the Covariance object, plus the nugget.
+    @pm.deterministic(trace=False)
+    def C_eval(C=C):
+        out = C(logp_mesh, logp_mesh)
+        for val,var in covariate_dict.itervalues():
+            out += np.outer(val,val)/var
+        return out
+    
+    return covariate_dict, C_eval
+    
+def trivial_means(lpm):
+    """
+    Returns a trivial mean function and an evaluating node.
+    """
+    # The mean of the field
+    @pm.deterministic(trace=True)
+    def M():
+        return pm.gp.Mean(zero_mean)
+    
+    # The mean, evaluated  at the observation points, plus the covariates    
+    @pm.deterministic(trace=False)
+    def M_eval(M=M, lpm=lpm):
+        return M(lpm)
+    return M, M_eval
+
+def basic_spatial_submodel(lon, lat, covariate_values):
     """
     A stem for building spatial models.
     """
@@ -48,11 +126,6 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
                 
     # Make coefficients for the covariates.
     m_const = pm.Uninformative('m_const', value=0.)
-    
-    covariate_dict = {}
-    for cname, cval in covariate_values.iteritems():
-        this_coef = pm.Uninformative(cname + '_coef', value=0.)
-        covariate_dict[cname] = (this_coef, cval)
 
     inc = pm.CircVonMises('inc', 0,0)
 
@@ -68,23 +141,7 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
     
     diff_degree = pm.Uniform('diff_degree',.01,3)
     
-    
-    for s in [sqrt_ecc, amp, scale]:
-        if prior_params.has_key(s.__name__):
-            s.parents.update(prior_params[s.__name__])
-        
-    # The mean of the field
-    @pm.deterministic(trace=True)
-    def M(mc=m_const):
-        return pm.gp.Mean(spatial_mean, m_const=mc)
-    
-    # The mean, evaluated  at the observation points, plus the covariates    
-    @pm.deterministic(trace=False)
-    def M_eval(M=M, lpm=logp_mesh, cv=covariate_dict):
-        out = M(lpm)
-        for c in cv.itervalues():
-            out += c[0]*c[1]
-        return out
+    M, M_eval = trivial_means(logp_mesh)
 
     # A Deterministic valued as a Covariance object. Uses covariance my_st, defined above. 
     # @pm.deterministic(trace=True)
@@ -94,33 +151,29 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
     @pm.deterministic(trace=True)
     def C(amp=amp,scale=scale,inc=inc,ecc=ecc,diff_degree=diff_degree):
         return pm.gp.FullRankCovariance(pm.gp.cov_funs.matern.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc, diff_degree=diff_degree)
-                
-    # The evaluation of the Covariance object, plus the nugget.
-    @pm.deterministic(trace=False)
-    def C_eval(C=C):
-        out = C(logp_mesh, logp_mesh)
-        return out
+    
+    covariate_dict, C_eval = cd_and_C_eval(covariate_values, C, logp_mesh)
     
     return locals()
 
 
-def basic_st_submodel(lon, lat, t, covariate_values, cpus, prior_params={}):
+def basic_st_submodel(lon, lat, t, covariate_values, cpus):
+    """
+    A stem for building spatiotemporal models.
+    """
     
     logp_mesh = combine_st_inputs(lon,lat,t)
                 
     # Make coefficients for the covariates.
     m_const = pm.Uninformative('m_const', value=0.)
     t_coef = pm.Uninformative('t_coef',value=.1)        
-    covariate_dict = {}
-    for cname, cval in covariate_values.iteritems():
-        this_coef = pm.Uninformative(cname + '_coef', value=0.)
-        covariate_dict[cname] = (this_coef, cval)
 
     inc = pm.CircVonMises('inc', 0,0)
 
     @pm.stochastic(__class__ = pm.CircularStochastic, lo=0, hi=1)
     def sqrt_ecc(value=.1):
         return 0.
+    
     ecc = pm.Lambda('ecc', lambda s=sqrt_ecc: s**2)
 
     # log_amp = pm.Uninformative('log_amp', value=0)
@@ -143,23 +196,8 @@ def basic_st_submodel(lon, lat, t, covariate_values, cpus, prior_params={}):
     @pm.stochastic(__class__ = pm.CircularStochastic, lo=0, hi=1)
     def sin_frac(value=.1):
         return 0.
-    
-    for s in [inc, sqrt_ecc, amp, scale, scale_t, t_lim_corr, sin_frac]:
-        if prior_params.has_key(s.__name__):
-            s.parents.update(prior_params[s.__name__])
 
-    # The mean of the field
-    @pm.deterministic
-    def M(mc=m_const, tc=t_coef):
-        return pm.gp.Mean(st_mean_comp, m_const = mc, t_coef = tc)
-    
-    # The mean, evaluated  at the observation points, plus the covariates    
-    @pm.deterministic(trace=False)
-    def M_eval(M=M, lpm=logp_mesh, cv=covariate_dict):
-        out = M(lpm)
-        for c in cv.itervalues():
-            out += c[0]*c[1]
-        return out
+    M, M_eval = trivial_means(logp_mesh)
         
     # A constraint on the space-time covariance parameters that ensures temporal correlations are 
     # always between -1 and 1.
@@ -176,10 +214,7 @@ def basic_st_submodel(lon, lat, t, covariate_values, cpus, prior_params={}):
         return pm.gp.FullRankCovariance(my_st, amp=amp, scale=scale, inc=inc, ecc=ecc,st=scale_t, sd=.5,
                                         tlc=t_lim_corr, sf = sin_frac, n_threads=cpus)
 
-    # The evaluation of the Covariance object, plus the nugget.
-    @pm.deterministic(trace=False)
-    def C_eval(C=C):
-        return C(logp_mesh, logp_mesh)
+    covariate_dict, C_eval = cd_and_C_eval(covariate_values, C, logp_mesh)
         
     return locals()
                                    
