@@ -180,6 +180,8 @@ def basic_st_submodel(lon, lat, t, covariate_values, cpus, prior_params={}):
     @pm.deterministic(trace=False)
     def C_eval(C=C):
         return C(logp_mesh, logp_mesh)
+        
+    return locals()
                                    
 
 class CovariateStepper(pm.StepMethod):
