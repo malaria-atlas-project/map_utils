@@ -2,6 +2,8 @@ import pymc as pm
 import numpy as np
 import time
 
+from st_cov_fun import my_st
+
 __all__ = ['FieldStepper', 'CovariateStepper', 'combine_spatial_inputs','combine_st_inputs','basic_spatial_submodel', 'basic_st_submodel','st_mean_comp']
 
 def spatial_mean(x, m_const):
