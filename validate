@@ -1,11 +1,18 @@
 #!/usr/bin/python
 
+import matplotlib
+matplotlib.use('PDF')
+matplotlib.interactive(False)
+
 from optparse import OptionParser
 from map_utils import *
 import tables as tb
 import numpy as np
 import os, imp, sys
 
+from pylab import csv2rec
+
+# run /Users/anand/renearch/map_utils/validate cov_test test_db 500 test_data.csv -t 1
 
 # Create option parser
 req_doc = """
@@ -24,10 +31,10 @@ req_doc = """
 """
 
 p = OptionParser('usage: %prog module database-file burn pred-pts [options]' + req_doc)
-p.add_option('-t','--thin',help='How much to thin the MCMC trace. Defaults to 10.',dest='thin',type='int')
+p.add_option('-t','--thin',help='How much to thin the MCMC trace. Defaults to 1, meaning no thinning. This is recommended unless it takes too long.',dest='thin',type='int')
 p.add_option('-i','--iter',help='The total number of samples to use in generating the map. Defaults to 20000',dest='total',type='int')
 
-p.set_defaults(thin=10)
+p.set_defaults(thin=1)
 p.set_defaults(total=20000)
 
 
@@ -35,7 +42,7 @@ p.set_defaults(total=20000)
 if len(args) != 4:
     raise ValueError, 'You must supply exactly four positional arguments. You supplied %i.'%len(args)
 
-o.module, o.hf_name, o.burn, o.pred_inputs = args
+o.module, o.hf_name, o.burn, o.pred_input = args
 o.burn = int(o.burn)
     
 
@@ -79,7 +86,6 @@ for n in input.dtype.names:
 hf = tb.openFile(o.hf_name)
 ch = hf.root.chain0
 meta = hf.root.metadata
-bins = np.linspace(0,1,o.n_bins)
 
 
 # Create predictive samples
@@ -90,6 +96,6 @@ samples = hdf5_to_samps(ch,meta,x,o.burn,o.thin,o.total,[sample_reduce],f_name, 
 # Write out
 
 hf_path, hf_basename  = os.path.split(o.hf_name)
-base_outname = mod_basename + '-' + os.path.split_ext(hf_basename)[0]
-out_name = os.path.join(hf_path, base_outname + '-samps.csv')
+base_outname = mod_basename + '-' + os.path.splitext(hf_basename)[0]
+out_name = os.path.join(hf_path, base_outname + '-houldout-samps.csv')
 samples.tofile(out_name,sep=',')

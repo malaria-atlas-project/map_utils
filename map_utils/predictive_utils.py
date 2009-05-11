@@ -6,7 +6,7 @@ from scipy import ndimage, mgrid
 from histogram_utils import *
 from pymc_utils import predictive_mean_and_std
 
-__all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs','display_asc','display_datapoints','histogram_reduce','histogram_finalize','maybe_convert']
+__all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs','display_asc','display_datapoints','histogram_reduce','histogram_finalize','maybe_convert','sample_reduce','sample_finalize']
 
 def maybe_convert(ra, field, dtype):
     """
@@ -221,9 +221,6 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, f_label, f_has_nug
     actual_total = n_per * len(iter)
     
     cols = chain.PyMCsamples.cols
-    f = cols.f
-    M = chain.group0.M
-    C = chain.group0.C
     x_obs = getattr(metadata,x_label)[:]
     
     # Avoid memory errors

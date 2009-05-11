@@ -11,6 +11,7 @@ import os, imp, sys
 import pymc as pm
 from pylab import csv2rec, rec2csv
 
+# run /Users/anand/renearch/map_utils/infer cov_test test_db test_data.csv -t 10 -n 8
 
 # Create option parser
 

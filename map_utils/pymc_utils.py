@@ -70,7 +70,7 @@ def cd_and_C_eval(covariate_values, C, logp_mesh, fac=1e10):
         
     for cname, cval in covariate_values.iteritems():
         cov_var = np.var(cval)
-        cov_mean = np.mean(cval)
+        cov_mean = np.abs(np.mean(cval))+np.sqrt(cov_var)
         means.append(cov_mean)
         covariate_dict[cname] = (cval, cov_var*fac)
         
@@ -147,7 +147,7 @@ def basic_st_submodel(lon, lat, t, covariate_values, cpus):
     sqrt_ecc = pm.Uniform('sqrt_ecc',0,.95)
     ecc = pm.Lambda('ecc', lambda s=sqrt_ecc: s**2)
     amp = pm.Exponential('amp',.1,value=1.)
-    scale = pm.Exponential('scale',.1,value=1.)
+    scale = pm.Exponential('scale',1.,value=1.)
     scale_t = pm.Exponential('scale_t',.1,value=.1)
     t_lim_corr = pm.Uniform('t_lim_corr',0,1)
 

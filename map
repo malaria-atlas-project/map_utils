@@ -6,7 +6,6 @@ import tables as tb
 import numpy as np
 import os, imp, sys
 
-# run  map /Users/anand/renearch/ibd-world/ibdw /Users/anand/renearch/ibd-world/ibdw/ibd_loc_all_030509.csv_matern.hdf5 1000 /Users/anand/renearch/ibd-world/ibdw/10kbuf5kres.asc -r 20 -t 400 -i 5000
 
 # Create option parser
 req_doc = """
