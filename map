@@ -1,0 +1,133 @@
+#!/usr/bin/python
+
+from optparse import OptionParser
+from map_utils import *
+import tables as tb
+import numpy as np
+import os, imp, sys
+
+# run  map /Users/anand/renearch/ibd-world/ibdw /Users/anand/renearch/ibd-world/ibdw/ibd_loc_all_030509.csv_matern.hdf5 1000 /Users/anand/renearch/ibd-world/ibdw/10kbuf5kres.asc -r 20 -t 400 -i 5000
+
+# Create option parser
+req_doc = """
+
+
+  module                The module from which maps are to be generated.
+  database-file         The name of the database file produced by the mcmc.
+  burn                  The number of initial MCMC iterations to discard. 
+                        You must provide this argument.
+  mask                  An ascii file of with some pixels MISSING. Maps will 
+                        be generated in ascii files with identical masks.
+"""
+p = OptionParser('usage: %prog module database-file burn mask [options]' + req_doc)
+p.add_option('-n','--n-bins',help='The number of bins to use when creating histograms. Defaults to 1000.',dest='n_bins',type='int')
+p.add_option('-b','--bufsize',help='The size of the buffer to use, in pixels. Use 0 if raster_thin=1. Defaults to 0.',dest='bufsize',type='int')
+p.add_option('-q','--quantiles',help="The quantile maps to generate. Should be in the form '0.05 0.25 0.5 0.75 0.95', and the inverted commas are important! Defaults to '0.05 0.25 0.5 0.75 0.95'",dest='quantile_list')
+p.add_option('-r','--raster_thin',help='The raster will be kriged at this level of degradation, then regridded. Set to 1 for final maps, ~10 for mild curiosity. Defaults to 1.',dest='raster_thin',type='int')
+p.add_option('-t','--thin',help='How much to thin the MCMC trace. Defaults to 10.',dest='thin',type='int')
+p.add_option('-i','--iter',help='The total number of samples to use in generating the map. Defaults to 20000',dest='total',type='int')
+p.add_option('-c','--covariates',help="The names and filenames of the covariates to use. Should be in the form 'rain rain.asc snow snow.asc', and the inverted commas are important! Defaults to None.",dest='covariate_list')
+p.add_option('y','--year',help='The DECIMAL YEAR SINCE 2009 at which the map should be produced. Required for space-time models.',dest='year',type='fleat')
+
+p.set_defaults(n_bins=1000)
+p.set_defaults(covariate_list=None)
+p.set_defaults(raster_thin=1)
+p.set_defaults(thin=10)
+p.set_defaults(total=20000)
+p.set_defaults(bufsize=0)
+p.set_defaults(year,np.nan)
+p.set_defaults(quantile_list='0.05 0.25 0.5 0.75 0.95')
+
+
+(o, args) = p.parse_args()
+
+(o, args) = p.parse_args()
+if len(args) != 4:
+    raise ValueError, 'You must supply exactly four positional arguments. You supplied %i.'%len(args)
+
+o.module, o.hf_name, o.burn, o.mask_name = args
+o.burn = int(o.burn)
+
+
+# Load up given module and load its relevant contents
+
+mod_path, mod_name = os.path.split(o.module)
+mod_basename, mod_ext = os.path.splitext(mod_name)
+mod_search_path = [mod_path, os.getcwd()] + sys.path
+mod = imp.load_module(mod_basename, *imp.find_module(mod_basename, mod_search_path))
+
+for n in ['f_name', 'nugget_name', 'f_has_nugget', 'postproc','x_name']:
+    try:
+        exec("%s=getattr(mod,'%s')"%(n,n))
+    except:
+        cls,inst,tb = sys.exc_info()
+        new_inst = cls('Could not import %s from %s. Tell Anand. Original error message:\n\n\t%s'%(n,mod_name,inst.message))
+        raise cls,new_inst,tb
+        
+
+
+# Parse covariates
+
+if o.covariate_list is None:
+    covariate_dict = None
+else:
+    covariate_list = o.covariate_list.split(' ')
+    if len(o.covariate_list) > 0 and o.bufsize > 0:
+        raise ValueError, 'You cannot have both covariates and a buffer. Make your own buffered asciis in ArcGIS, and use those.'
+    # FIXME: asc_to_locs won't actually work here, you need another fn
+    covariate_dict = dict(zip(covariate_list[::2], [asc_to_locs(fname, thin=o.raster_thin, bufsize=0) for fname in covariate_list[1::2]]))
+
+
+# Parse quantiles
+
+if len(o.quantile_list) == 0:
+    q = []
+else:
+    q = map(float, o.quantile_list.split(' '))
+
+
+# Create predictive locations and open hdf5 archive
+
+x, unmasked = asc_to_locs(o.mask_name,thin=o.raster_thin, bufsize=o.bufsize)
+if not np.isnan(year):
+    x = np.vstack((x.T,year*np.ones(x.shape[0]))).T
+    
+hf = tb.openFile(o.hf_name)
+ch = hf.root.chain0
+meta = hf.root.metadata
+if not meta.logp_mesh.shape[1] == x.shape[1]:
+    raise ValueError, 'It looks like you have inappropriately provided or omitted the year argument.'
+bins = np.linspace(0,1,o.n_bins)
+
+
+# Create utility fns
+
+def binfn(arr,n_bins=o.n_bins):
+    return np.array(arr*n_bins,dtype=int)
+
+hsr = histogram_reduce(bins, binfn)
+hsf = histogram_finalize(bins, q, hsr)
+
+def finalize(prod, n):
+    mean = prod[mean_reduce] / n
+    var = prod[var_reduce] / n - mean**2
+    std = np.sqrt(var)
+    std_to_mean = std/mean
+    out = {'mean': mean, 'var': var, 'std': std, 'std-to-mean':std_to_mean}
+    out.update(hsf(prod, n))
+    return out
+
+
+# Create rasters
+
+products = hdf5_to_samps(ch,meta,x,o.burn,o.thin,o.total,[mean_reduce, var_reduce, hsr], f_name, f_has_nugget, x_name, covariate_dict, nugget_name, postproc, finalize)
+
+
+# Write out
+
+hf_path, hf_basename  = os.path.split(o.hf_name)
+base_outname = mod_basename + '-' + os.path.split_ext(hf_basename)[0]
+for k,v in products.iteritems():
+    out_name = os.path.join(hf_path, base_outname + '-%s.asc'%k)
+    print 'Generating output file %s'%(out_name)
+    q=vec_to_asc(v,o.mask_name,out_name,unmasked)

@@ -4,3 +4,4 @@ from getAsciiheaderFromTemplateHDF5 import *
 from exportAscii import *
 from pymc_utils import *
 from predictive_utils import *
+from histogram_utils import *

@@ -6,7 +6,7 @@ cf2py threadsafe
       INTEGER nxk, i, k
       
       do i=1,nxi
-          k = ind(i)+1
+          k = min(ind(i)+1, nxk)
           x(i,k) = x(i,k) + 1
       end do
 
