@@ -1,0 +1,130 @@
+#!/usr/bin/python
+import matplotlib
+matplotlib.use('PDF')
+matplotlib.interactive(False)
+
+from optparse import OptionParser
+from map_utils import *
+import tables as tb
+import numpy as np
+import os, imp, sys
+import pymc as pm
+from pylab import csv2rec, rec2csv
+
+# run /Users/anand/renearch/map_utils/infer cov_test test_db test_data.csv -t 10 -n 8
+
+# Create option parser
+
+req_doc = """
+
+
+  module                The module from which maps are to be generated.
+  database-file         The name of the database file to be produced.
+  input                 A csv file containing the lon, lat, (time,) and 
+                        associated covariate values, as well as 'pos' and
+                        'neg', corresponding to each datapoint.
+                        
+                        NOTE: time must be in units of DECIMAL YEARS SINCE
+                        2009. That means it will usually be negative. That
+                        is OK.
+"""
+
+p = OptionParser('usage: %prog module database-file inputt [options]' + req_doc)
+p.add_option('-t','--thin',help='How much to thin the MCMC trace. Defaults to 10.',dest='thin',type='int')
+p.add_option('-i','--iter',help='The total number of MCMC iterations to conduct. Defaults to 50000',dest='total',type='int')
+p.add_option('-n','--ncpus',help='Number of CPU cores to make available to the MCMC',dest='ncpus',type='int')
+p.add_option('-d','--delay',help='Delay iterations for AdaptiveMetropolis instance',dest='AM_delay',type='int')
+
+p.set_defaults(thin=10)
+p.set_defaults(total=20000)
+p.set_defaults(AM_delay=5000)
+p.set_defaults(ncpus=os.environ['OMP_NUM_THREADS'])
+
+(o, args) = p.parse_args()
+if len(args) != 3:
+    raise IOError, 'You must supply exactly four positional arguments. You supplied %i.'%len(args)
+
+o.module, o.hf_name, o.input_name = args
+
+
+# Figure out what the database file is supposed to be
+
+hf_path, hf_basename  = os.path.split(o.hf_name)    
+if hf_path=='':
+    hf_path='./'
+if hf_basename in os.listdir(hf_path):
+    rm_q = raw_input('\nDatabase file %s already exists in path %s. Shall I kill him, lord? [yes or no] '%(hf_basename, hf_path))
+    if rm_q.strip() in ['y','YES','Yes','yes','Y']:
+        print 'Excellent.'
+        os.remove(o.hf_name)
+    elif rm_q.strip() in ['n','NO','No','no','N']:
+        raise OSError, 'You must treat your filesystem more firmly.'
+    else:
+        raise OSError, 'I do not know what you are trying to say. Move, rename or delete the database to continue.'
+
+
+# Load up given module and load its relevant contents
+
+mod_path, mod_name = os.path.split(o.module)
+mod_basename, mod_ext = os.path.splitext(mod_name)
+mod_search_path = [mod_path, os.getcwd()] + sys.path
+mod = imp.load_module(mod_basename, *imp.find_module(mod_basename, mod_search_path))
+
+for n in ['make_model', 'metadata_keys']:
+    try:
+        exec("%s=getattr(mod,'%s')"%(n,n))
+    except:
+        cls,inst,tb = sys.exc_info()
+        new_inst = cls('Could not import %s from %s. Tell Anand. Original error message:\n\n\t%s'%(n,mod_name,inst.message))
+        raise cls,new_inst,tb
+
+
+# Parse input file
+
+input = csv2rec(o.input_name)
+lon = maybe_convert(input, 'lon', 'float')
+lat = maybe_convert(input, 'lat', 'float')
+pos = maybe_convert(input, 'pos', 'float')
+neg = maybe_convert(input, 'neg', 'float')
+mod_inputs = (pos,neg,lon,lat)
+if hasattr(input, 't'):
+    t = maybe_convert(input, 't', 'float')
+    x = combine_st_inputs(lon,lat,t)
+    mod_inputs = mod_inputs + (t,)
+else:
+    x = combine_spatial_inputs(lon,lat)
+
+covariate_dict = {}
+for n in input.dtype.names:
+    if n not in ['lon','lat','pos','neg']:
+        covariate_dict[n]=maybe_convert(input, n, 'float')
+
+mod_inputs = mod_inputs + (covariate_dict,o.ncpus)
+
+
+# Create MCMC object, add metadata, and assign appropriate step method.
+
+if hf_path != '':
+    os.chdir(hf_path)
+M = pm.MCMC(make_model(*mod_inputs),db='hdf5',dbname=hf_basename)
+add_standard_metadata(M, M.logp_mesh, M.covariate_dict, **(dict(zip(metadata_keys, [getattr(M,k) for k in metadata_keys]))))
+scalar_stochastics = filter(lambda s: len(np.atleast_1d(s.value)) == 1, M.stochastics)
+scale_dict = dict(zip(scalar_stochastics, .001*np.ones(len(scalar_stochastics))))
+M.use_step_method(pm.AdaptiveMetropolis, scalar_stochastics, scales=scale_dict, delay=o.AM_delay)
+
+
+# Run MCMC
+
+M.isample(o.total,0,o.thin)
+
+
+# Write out
+
+base_outname = mod_basename + '-' + os.path.splitext(hf_basename)[0]
+plot_dir = os.path.join(hf_path, base_outname+'_plots')
+try:
+    os.mkdir(plot_dir)
+except OSError:
+    pass
+os.chdir(plot_dir)
+pm.Matplot.plot(M, format='pdf')

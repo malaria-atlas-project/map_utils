@@ -20,6 +20,7 @@ if __name__ == '__main__':
             packages=['map_utils'],
             license="Public domain",
             **(config.todict()))
-    os.system('chmod ugo+x map_utils/trace-to-txt')
-    os.system('cp map_utils/trace-to-txt /usr/local/bin')
+    for ex_fname in ['trace-to-txt','infer','map','validate']:
+        os.system('chmod ugo+x %s'%ex_fname)
+        os.system('cp %s /usr/local/bin'%ex_fname)
 
