@@ -6,7 +6,7 @@ from pymc_utils import *
 from predictive_utils import *
 from histogram_utils import *
 from exportHDF5asASCII import *
-
+from variograms import *
 
 def validate_format_str(st):
     for i in [0,2]:

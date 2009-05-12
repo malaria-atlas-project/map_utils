@@ -26,7 +26,7 @@ p.add_option('-r','--raster_thin',help='The raster will be kriged at this level 
 p.add_option('-t','--thin',help='How much to thin the MCMC trace. Defaults to 10.',dest='thin',type='int')
 p.add_option('-i','--iter',help='The total number of samples to use in generating the map. Defaults to 20000',dest='total',type='int')
 p.add_option('-c','--covariates',help="The names and filenames of the covariates to use. Should be in the form 'rain rain.asc snow snow.asc', and the inverted commas are important! Defaults to None.",dest='covariate_list')
-p.add_option('y','--year',help='The DECIMAL YEAR SINCE 2009 at which the map should be produced. Required for space-time models.',dest='year',type='fleat')
+p.add_option('-y','--year',help='The DECIMAL YEAR SINCE 2009 at which the map should be produced. Required for space-time models.',dest='year',type='float')
 
 p.set_defaults(n_bins=1000)
 p.set_defaults(covariate_list=None)
@@ -34,7 +34,7 @@ p.set_defaults(raster_thin=1)
 p.set_defaults(thin=10)
 p.set_defaults(total=20000)
 p.set_defaults(bufsize=0)
-p.set_defaults(year,np.nan)
+p.set_defaults(year=np.nan)
 p.set_defaults(quantile_list='0.05 0.25 0.5 0.75 0.95')
 
 
@@ -88,7 +88,7 @@ else:
 # Create predictive locations and open hdf5 archive
 
 x, unmasked = asc_to_locs(o.mask_name,thin=o.raster_thin, bufsize=o.bufsize)
-if not np.isnan(year):
+if not np.isnan(o.year):
     x = np.vstack((x.T,year*np.ones(x.shape[0]))).T
     
 hf = tb.openFile(o.hf_name)
@@ -125,7 +125,7 @@ products = hdf5_to_samps(ch,meta,x,o.burn,o.thin,o.total,[mean_reduce, var_reduc
 # Write out
 
 hf_path, hf_basename  = os.path.split(o.hf_name)
-base_outname = mod_basename + '-' + os.path.split_ext(hf_basename)[0]
+base_outname = mod_basename + '-' + os.path.splitext(hf_basename)[0]
 for k,v in products.iteritems():
     out_name = os.path.join(hf_path, base_outname + '-%s.asc'%k)
     print 'Generating output file %s'%(out_name)

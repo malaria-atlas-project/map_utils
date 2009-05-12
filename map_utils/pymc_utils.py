@@ -6,7 +6,7 @@ from st_cov_fun import my_st
 
 __all__ = ['FieldStepper', 'combine_spatial_inputs','combine_st_inputs','basic_spatial_submodel', 'basic_st_submodel',
             'st_mean_comp','add_standard_metadata','covariate_trace', 'sample_covariates_from_chain','sample_covariates',
-            'predictive_mean_and_std']
+            'predictive_mean_and_std','trivial_means','cd_and_C_eval']
 
 def spatial_mean(x, m_const):
     return m_const*np.ones(x.shape[0])
@@ -122,11 +122,6 @@ def basic_spatial_submodel(lon, lat, covariate_values):
     
     M, M_eval = trivial_means(logp_mesh)
 
-    # A Deterministic valued as a Covariance object. Uses Matern covariance. 
-    # @pm.deterministic(trace=True)
-    # def C(amp=amp,scale=scale,inc=inc,ecc=ecc):
-    #     return pm.gp.FullRankCovariance(pm.gp.cov_funs.exponential.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc)
-    
     @pm.deterministic(trace=True)
     def C(amp=amp,scale=scale,inc=inc,ecc=ecc,diff_degree=diff_degree):
         return pm.gp.FullRankCovariance(pm.gp.cov_funs.matern.aniso_geo_rad, amp=amp, scale=scale, inc=inc, ecc=ecc, diff_degree=diff_degree)
@@ -338,9 +333,10 @@ class FieldStepper(pm.StepMethod):
     at some point. This doesn't save any Cholesky decompositions or covariance 
     evaluations.
     """
-    def __init__(self, f, tau, V, C_eval, M_eval, logp_mesh, eps_p_f, ti, incomp_jump=False, jump_tau = True):
+    # def __init__(self, f, tau, V, C_eval, M_eval, logp_mesh, eps_p_f, ti, incomp_jump=False, jump_tau = True):
+    def __init__(self, f, V, C_eval, M_eval, logp_mesh, eps_p_f, ti, incomp_jump=False):    
         self.f = f
-        self.tau = tau
+        # self.tau = tau
         self.V = V
         self.C_eval = C_eval
         self.M_eval = M_eval
@@ -353,11 +349,13 @@ class FieldStepper(pm.StepMethod):
         self.scratch2 = np.asmatrix(np.empty(self.C_eval.value.shape, order='F'))
         self.scratch3 = np.empty(self.M_eval.value.shape)     
 
-        self.jump_tau = jump_tau
-        if self.jump_tau:
-            pm.StepMethod.__init__(self,[f,tau])
-        else:
-            pm.StepMethod.__init__(self,[f])
+        pm.StepMethod.__init__(self,[f])
+
+        # self.jump_tau = jump_tau
+        # if self.jump_tau:
+        #     pm.StepMethod.__init__(self,[f,tau])
+        # else:
+        #     pm.StepMethod.__init__(self,[f])
             
         self.time = 0.
         self.incomp_time = 0.
@@ -373,13 +371,13 @@ class FieldStepper(pm.StepMethod):
         for i in xrange(len(self.scratch3)):
             self.scratch3[i] = np.sum(eps_p_f[self.ti[i]] - f[i])
     
-        if self.jump_tau:
-            # tau's full conditional is Gamma.
-            amp_alph = eps_p_f.shape[0]/2.+1.
-            tau_alph = amp_alph + self.tau.parents['alpha']
-            tau_vec = self.scratch3 - self.f.value
-            tau_bet = np.dot(tau_vec, tau_vec)/2. + self.tau.parents['beta']
-            self.tau.value = pm.rgamma(tau_alph,tau_bet)
+        # if self.jump_tau:
+        #     # tau's full conditional is Gamma.
+        #     amp_alph = eps_p_f.shape[0]/2.+1.
+        #     tau_alph = amp_alph + self.tau.parents['alpha']
+        #     tau_vec = self.scratch3 - self.f.value
+        #     tau_bet = np.dot(tau_vec, tau_vec)/2. + self.tau.parents['beta']
+        #     self.tau.value = pm.rgamma(tau_alph,tau_bet)
 
         # Compute Cholesky factor of covariance of eps_p_f, C(x,x) + V
         in_chol = fc(self.C_eval.value, self.scratch1)
