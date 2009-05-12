@@ -59,7 +59,7 @@ def add_standard_metadata(M, logp_mesh, covariate_dict, **others):
         else:
             hf.createArray(hf.root.metadata, name, val)    
     
-def cd_and_C_eval(covariate_values, C, logp_mesh, fac=1e10):
+def cd_and_C_eval(covariate_values, C, logp_mesh, fac=1e6):
     """
     Returns a {name: value, prior variance} dictionary
     and an evaluated covariance with covariates incorporated.
@@ -149,7 +149,7 @@ def basic_st_submodel(lon, lat, t, covariate_values, cpus):
     amp = pm.Exponential('amp',.1,value=1.)
     scale = pm.Exponential('scale',1.,value=1.)
     scale_t = pm.Exponential('scale_t',.1,value=.1)
-    t_lim_corr = pm.Uniform('t_lim_corr',0,1)
+    t_lim_corr = pm.Uniform('t_lim_corr',0,.95)
 
     @pm.stochastic(__class__ = pm.CircularStochastic, lo=0, hi=1)
     def sin_frac(value=.1):
@@ -287,6 +287,8 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
         pred_covariate_values = np.array([pred_cv_dict[key] for key in n])
         input_covariate_values = np.array([covariate_dict[key][0] for key in n])
     
+    # How many times must a man condition a multivariate normal
+    
     M = chain.group0.M[i]
     C = chain.group0.C[i]
 
@@ -294,7 +296,7 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
     M_input = M(logp_mesh)
     M_pred = M(x)
 
-    C_input = C(logp_mesh, logp_mesh) 
+    C_input = C(logp_mesh, logp_mesh)
     if pred_cv_dict is not None:
         C_input += np.dot(np.dot(input_covariate_values.T, prior_covariate_variance), input_covariate_values)
     if nugget_label is not None and f_has_nugget:
@@ -307,6 +309,8 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
     if pred_cv_dict is not None:
         C_cross += np.dot(np.dot(input_covariate_values.T, prior_covariate_variance), pred_covariate_values)
         V_pred += np.sum(np.dot(np.sqrt(prior_covariate_variance), pred_covariate_values)**2, axis=0)
+    if np.any(np.isnan(V_pred)):
+        raise ValueError
 
     SC_cross = pm.gp.trisolve(S_input,C_cross,uplo='L')
     V_out = V_pred - np.sum(np.asarray(SC_cross)**2,axis=0)
@@ -316,7 +320,12 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
     except:
         f = getattr(meta,f_label)[:]
 
-    M_out = M_pred - np.asarray(np.dot(SC_cross.T,pm.gp.trisolve(S_input, (f-M_input)))).squeeze()
+    M_out = M_pred + np.asarray(np.dot(SC_cross.T,pm.gp.trisolve(S_input, (f-M_input), uplo='L'))).squeeze()
+    
+    # from IPython.Debugger import Pdb
+    # Pdb(color_scheme='Linux').set_trace()   
+    if np.any(np.isnan(np.sqrt(V_out))) or np.any(np.isnan(M_out)):
+        raise ValueError, 'Some predictive samples were NaN. Keep all your input files and tell Anand.'
     
     return M_out, np.sqrt(V_out)        
     

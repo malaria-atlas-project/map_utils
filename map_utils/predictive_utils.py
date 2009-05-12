@@ -5,6 +5,7 @@ from exportAscii import asc_to_ndarray, get_header, exportAscii
 from scipy import ndimage, mgrid
 from histogram_utils import *
 from pymc_utils import predictive_mean_and_std
+import time
 
 __all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs','display_asc','display_datapoints','histogram_reduce','histogram_finalize','maybe_convert','sample_reduce','sample_finalize']
 
@@ -213,7 +214,7 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, f_label, f_has_nug
             This function is applied to the products before returning. It should
             take a second argument which is the actual number of realizations
             produced.
-        """
+    """
     
     products = dict(zip(fns, [None]*len(fns)))
     iter = np.arange(burn,len(chain.PyMCsamples),thin)
@@ -233,8 +234,15 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, f_label, f_has_nug
     M_pred = np.empty(x.shape[0])
     V_pred = np.empty(x.shape[0])
     
-    for i in iter:
-        print i
+    time_count = -np.inf
+    
+    for j in xrange(len(iter)):
+        
+        i = iter[j]
+        
+        if time.time() - time_count > 10:
+            time_count = time.time()
+            print ((j*100)/len(iter)), '% complete'
         
         M_pred, S_pred = predictive_mean_and_std(chain, metadata, i, f_label, x_label, x, f_has_nugget, pred_cv_dict, nugget_label)        
         
