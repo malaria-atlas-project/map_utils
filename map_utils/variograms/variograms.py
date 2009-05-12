@@ -11,9 +11,9 @@ def find(value, bin_edges):
     for k in np.xrange(len(bin_edges)):
         if value<bin_edges[k]:
             break
-    return k-1    
+    return k-1
 
-def plot_variogram(d,x,nb,a,h,m=-1.,r=6379.1,ti='',xl='distance, km'):
+def variogram(d,x,nb,a,h,m=-1.,r=6379.1,plot=True,ti='',xl='distance, km'):
     """
     blf,bw,bl,c,n = plot_variogram(d,x,nb,a,h,m=-1.,r=6379.1,ti='',xl='distance, km')
     Creates and plots a variogram.
@@ -26,6 +26,7 @@ def plot_variogram(d,x,nb,a,h,m=-1.,r=6379.1,ti='',xl='distance, km'):
     - h: Halfwidth angle
     - m: Maximum distance to consider
     - r: Radius of the 'earth'
+    - plot: Whether to generate plots
     - ti: Title of plot
     - xl: X label of plot
     
@@ -40,20 +41,22 @@ def plot_variogram(d,x,nb,a,h,m=-1.,r=6379.1,ti='',xl='distance, km'):
     """
     
     blf,bw,bl,c,n = dvar(d,x,nb,a,h,r,m)
+    
+    if plot:
+        pl.figure(figsize=(12,6))
+        pl.axis('off')
+        pl.title(ti)
 
-    pl.figure(figsize=(12,6))
-    pl.axis('off')
-    pl.title(ti)
-
-    pl.subplot(1,2,1)
-    for i in range(len(a)):
-        pl.plot(bl,c[i,:],label=int(a[i]*180/np.pi).__str__(),linestyle='-',marker='.',markersize=8)
-    pl.xlabel(xl)
-    pl.legend()
-
-    pl.subplot(1,2,2)
-    for i in range(len(a)):
-        pl.plot(bl,n[i,:],label=int(a[i]*180/np.pi).__str__(),linestyle='-',marker='.',markersize=8)
-        pl.ylabel("Number of pairs")
+        pl.subplot(1,2,1)
+        for i in range(len(a)):
+            pl.plot(bl,c[i,:],label=int(a[i]*180/np.pi).__str__(),linestyle='-',marker='.',markersize=8)
         pl.xlabel(xl)
+        pl.legend()
+
+        pl.subplot(1,2,2)
+        for i in range(len(a)):
+            pl.plot(bl,n[i,:],label=int(a[i]*180/np.pi).__str__(),linestyle='-',marker='.',markersize=8)
+            pl.ylabel("Number of pairs")
+            pl.xlabel(xl)
+
     return blf,bw,bl,c,n

@@ -404,7 +404,6 @@ class FieldStepper(pm.StepMethod):
         info = pm.gp.linalg_utils.dpotrf_wrap(C_step.T)
         if info > 0:
             print 'WARNING: Cholesky decomposition of full conditional covariance not positive definite.'
-            return
             raise np.linalg.LinAlgError
         
         # Update value of f.
