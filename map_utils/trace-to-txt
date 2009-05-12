@@ -3,6 +3,7 @@
 import tables as tb
 import numpy as np
 import os,sys
+import pylab as pl
 
 dbfile = sys.argv[1]
 burn = int(sys.argv[2])
@@ -18,11 +19,24 @@ ind = np.array(np.linspace(burn, len(hr)-1, 500), dtype=int)
 os.mkdir(dbname)
 os.chdir(dbname)
 
+
 # Write in longitude, latitude and time
+indices_to_keep = hf.root.metadata.ui[:]
+(indices_to_keep+1).tofile('indices_to_keep.txt', sep=',')
+
 lpm = hf.root.metadata.logp_mesh
 comps = ['lon','lat','t']
 for i in xrange(3):
     lpm[:,i].tofile(comps[i]+'.txt',sep=',')
+
+try:
+    urb = hf.root.metadata.urb[:][indices_to_keep]
+except:
+    urb = 0
+periurb = hf.root.metadata.periurb[:][indices_to_keep]
+urb_cls = 1+periurb+2.*urb
+urb_cls.tofile('urb_cls.txt',sep=',')
+
 
 # Write in the traces
 for n in hr.colnames:
@@ -41,7 +55,7 @@ for n in hr.colnames:
     # Scalar-valued variables' traces
     else:
         col[:][ind].tofile(n+'.txt',sep=',')
-    
+        
 # Zip and return    
 os.chdir('..')
 os.system('tar -cf %s.tar %s'%(dbname, dbname))
