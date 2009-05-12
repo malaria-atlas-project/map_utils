@@ -40,16 +40,16 @@ def checkAndBuildPaths (fpath,VERBOSE=False,BUILD=False):
         # if we are building missing directories, first guess whether the desired path is to a directory or a file:
 
         # get last component of path, and define whether a file (recognised by having an extension) or a directory (no extension)
-        last = os.path.split(fpath)[-1]
+        #last = os.path.split(fpath)[-1]
 
-        if last == '':
-            pathtype = "DIR"
-        elif last.find(".") == -1:
-           pathtype = "DIR"
-        else:
-            pathtype = "FILE"
-            print "WARNING!!! Object at "+fpath+" does not exist - asked to build BUT THIS LOOKS LIKE A FILE - so check manually\n"
-            return(-9999)
+        #if last == '':
+        #    pathtype = "DIR"
+        #elif last.find(".") == -1:
+        #   pathtype = "DIR"
+        #else:
+        #    pathtype = "FILE"
+        #    print "WARNING!!! Object at "+fpath+" does not exist - asked to build BUT THIS LOOKS LIKE A FILE - so check manually\n"
+        #    return(-9999)
 
         # if happy its a directory, we can now start building the missing directories
         mkdir_errors = True
