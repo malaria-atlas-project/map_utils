@@ -2,8 +2,6 @@ import numpy as np
 import pylab as pl
 from directions import *
 
-__all__ = ['plot_variogram']
-
 def find(value, bin_edges):
     """
     helper function for variogram.

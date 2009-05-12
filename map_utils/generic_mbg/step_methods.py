@@ -1,5 +1,40 @@
 import pymc as pm
 import numpy as np
+import time
+
+class CovariateStepper(pm.StepMethod):
+    """
+    A step method for a dictionary of covariate coefficients.
+    """
+ 
+    def __init__(self, covariate_dict, M_eval, sig, d):
+        self.M = M_eval
+        self.sig = sig
+        self.d = d.value
+ 
+        cvv = covariate_dict.values()
+        self.beta = pm.Container([v[0] for v in cvv])
+        self.x = np.asarray([v[1] for v in cvv])
+ 
+        pm.StepMethod.__init__(self, self.beta)
+ 
+    def step(self):
+ 
+        pri_sig = np.asarray(self.sig.value)
+        lo = pm.gp.trisolve(pri_sig, self.x.T, uplo='L').T
+        post_tau = np.dot(lo,lo.T)
+        l = np.linalg.cholesky(post_tau)
+ 
+        post_C = pm.gp.trisolve(l, np.eye(l.shape[0]),uplo='L')
+        post_C = pm.gp.trisolve(l.T, post_C, uplo='U')
+ 
+        post_mean = np.dot(lo, pm.gp.trisolve(pri_sig, self.d, uplo='L'))
+        post_mean = pm.gp.trisolve(l, post_mean, uplo='L')
+        post_mean = pm.gp.trisolve(l.T, post_mean, uplo='U')
+ 
+        new_val = pm.rmv_normal_cov(post_mean, post_C).squeeze()
+ 
+        [b.set_value(nv) for (b,nv) in zip(self.beta, new_val)]
 
 class FieldStepper(pm.StepMethod):
     """

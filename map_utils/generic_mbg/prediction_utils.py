@@ -1,7 +1,7 @@
 import pymc as pm
 import tables as tb
 import numpy as np
-from exportAscii import asc_to_ndarray, get_header, exportAscii
+from map_utils import asc_to_ndarray, get_header, exportAscii
 from scipy import ndimage, mgrid
 from histogram_utils import *
 import time

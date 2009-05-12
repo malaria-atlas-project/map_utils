@@ -117,7 +117,7 @@ if hasattr(M, 'f'):
     else:
         ti = np.arange(M.logp_mesh.shape[0])
     M.use_step_method(FieldStepper, M.f, M.V, M.C_eval, M.M_eval, M.logp_mesh, M.eps_p_f, ti)
-    M.use_step_method(pm.Metropolis, M.eps_p_f)
+    # M.use_step_method(pm.Metropolis, M.eps_p_f)
 
 M.use_step_method(pm.AdaptiveMetropolis, scalar_stochastics, scales=scale_dict, delay=o.AM_delay)
 
