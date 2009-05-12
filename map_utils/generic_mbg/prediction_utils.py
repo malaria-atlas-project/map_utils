@@ -4,10 +4,11 @@ import numpy as np
 from exportAscii import asc_to_ndarray, get_header, exportAscii
 from scipy import ndimage, mgrid
 from histogram_utils import *
-from pymc_utils import predictive_mean_and_std
 import time
 
-__all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs','display_asc','display_datapoints','histogram_reduce','histogram_finalize','maybe_convert','sample_reduce','sample_finalize']
+__all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs',
+            'display_asc','display_datapoints','histogram_reduce','histogram_finalize','maybe_convert','sample_reduce',
+            'sample_finalize']
 
 def maybe_convert(ra, field, dtype):
     """
@@ -306,7 +307,70 @@ def vec_to_asc(vec, fname, out_fname, unmasked, path=''):
     exportAscii(out_conv.data,out_fname,header,True-out_conv.mask)
     
     return out
-    
+
+def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=False, pred_cv_dict=None, nugget_label=None):
+    """
+    Computes marginal (pointwise) predictive mean and variance for f(x).
+    Expects input from an hdf5 datafile.
+        - chain : hdf5 group.
+        - meta : hdf5 group.
+        - i : integer.
+        - f_label : string or array.
+        - x : numpy array
+        - pred_cv_dict : {name : value-on-predmesh}
+        - nugget_label : string
+    """
+
+    if pred_cv_dict is not None:
+        n = pred_cv_dict.keys()
+
+        covariate_dict = meta.covariates[0]
+        prior_covariate_variance = np.diag([covariate_dict[key][1] for key in n])
+
+        pred_covariate_values = np.array([pred_cv_dict[key] for key in n])
+        input_covariate_values = np.array([covariate_dict[key][0] for key in n])
+
+    # How many times must a man condition a multivariate normal
+
+    M = chain.group0.M[i]
+    C = chain.group0.C[i]
+
+    logp_mesh = getattr(meta,x_label)[:]    
+    M_input = M(logp_mesh)
+    M_pred = M(x)
+
+    C_input = C(logp_mesh, logp_mesh)
+    if pred_cv_dict is not None:
+        C_input += np.dot(np.dot(input_covariate_values.T, prior_covariate_variance), input_covariate_values)
+    if nugget_label is not None and f_has_nugget:
+        nug = chain.PyMCsamples.cols.V[i]
+        C_input += nug*np.eye(np.sum(logp_mesh.shape[:-1]))
+    S_input = np.linalg.cholesky(C_input)
+
+    C_cross = C(logp_mesh, x) 
+    V_pred = C(x)
+    if pred_cv_dict is not None:
+        C_cross += np.dot(np.dot(input_covariate_values.T, prior_covariate_variance), pred_covariate_values)
+        V_pred += np.sum(np.dot(np.sqrt(prior_covariate_variance), pred_covariate_values)**2, axis=0)
+    if np.any(np.isnan(V_pred)):
+        raise ValueError
+
+    SC_cross = pm.gp.trisolve(S_input,C_cross,uplo='L')
+    V_out = V_pred - np.sum(np.asarray(SC_cross)**2,axis=0)
+
+    try:
+        f = chain.PyMCsamples.col(f_label)[i]
+    except:
+        f = getattr(meta,f_label)[:]
+
+    M_out = M_pred + np.asarray(np.dot(SC_cross.T,pm.gp.trisolve(S_input, (f-M_input), uplo='L'))).squeeze()
+
+    # from IPython.Debugger import Pdb
+    # Pdb(color_scheme='Linux').set_trace()   
+    if np.any(np.isnan(np.sqrt(V_out))) or np.any(np.isnan(M_out)):
+        raise ValueError, 'Some predictive samples were NaN. Keep all your input files and tell Anand.'
+
+    return M_out, np.sqrt(V_out)
     
 if __name__ == '__main__':
     from pylab import *
