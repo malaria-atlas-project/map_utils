@@ -169,7 +169,7 @@ def histogram_finalize(bins, q, hr):
         # Call to Fortran function qextract
         quantile_surfs = qextract(hist,n,q,bins)
         for i in xrange(len(q)):
-            out['quantile_%s'%q[i]] = quantile_surfs[i]
+            out['quantile-%s'%q[i]] = quantile_surfs[i]
         # from IPython.Debugger import Pdb
         # Pdb(color_scheme='Linux').set_trace()   
         return out

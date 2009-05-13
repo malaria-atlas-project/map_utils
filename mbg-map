@@ -125,7 +125,7 @@ products = hdf5_to_samps(ch,meta,x,o.burn,o.thin,o.total,[mean_reduce, var_reduc
 # Write out
 
 hf_path, hf_basename  = os.path.split(o.hf_name)
-base_outname = mod_basename + '-' + os.path.splitext(hf_basename)[0]
+base_outname = os.path.splitext(hf_basename)[0]
 for k,v in products.iteritems():
     out_name = os.path.join(hf_path, base_outname + '-%s.asc'%k)
     print 'Generating output file %s'%(out_name)
