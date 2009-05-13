@@ -43,3 +43,154 @@ cf2py threadsafe
 
       RETURN
       END
+     
+
+      SUBROUTINE iinvlogit(C,nx,cmin,cmax)
+
+cf2py intent(inplace) C
+cf2py integer intent(in), optional :: cmin = 0
+cf2py integer intent(in), optional :: cmax = -1
+cf2py intent(hide) nx,ny
+cf2py threadsafe
+
+      DOUBLE PRECISION C(nx)
+      INTEGER nx, i, cmin, cmax
+
+      EXTERNAL DSCAL
+
+      if (cmax.EQ.-1) then
+          cmax = nx
+      end if
+
+
+        do i=cmin+1,cmax
+            C(i) = 1.0D0 / (1.0D0 + dexp(-C(i)))
+        end do
+
+
+      RETURN
+      END   
+
+
+      SUBROUTINE iaaxpy(Y,X,a,nx,cmin,cmax)
+
+cf2py intent(inplace) Y
+cf2py intent(in) X,a
+cf2py integer intent(in), optional :: cmin = 0
+cf2py integer intent(in), optional :: cmax = -1
+cf2py intent(hide) nx
+cf2py threadsafe
+
+      DOUBLE PRECISION Y(nx)
+      DOUBLE PRECISION X(nx),a
+      INTEGER nx, cmin, cmax
+      EXTERNAL DAXPY
+
+      EXTERNAL DSCAL
+
+      if (cmax.EQ.-1) then
+          cmax = nx
+      end if
+
+
+      CALL DAXPY(cmax-cmin,a,X(cmin+1),1,Y(cmin+1),1)
+
+
+      RETURN
+      END
+
+
+      SUBROUTINE iaadd(C,A,nx,ny,cmin,cmax)
+
+cf2py intent(inplace) C
+cf2py intent(in) A
+cf2py integer intent(in), optional :: cmin = 0
+cf2py integer intent(in), optional :: cmax = -1
+cf2py intent(hide) nx,ny
+cf2py threadsafe
+
+      DOUBLE PRECISION C(nx,ny)
+      DOUBLE PRECISION A
+      INTEGER nx, ny, i, j, cmin, cmax
+
+      EXTERNAL DSCAL
+
+      if (cmax.EQ.-1) then
+          cmax = ny
+      end if
+
+
+        do j=cmin+1,cmax
+            do i=1,nx
+                C(i,j) = C(i,j) + A(i,j)
+            end do
+ !          CALL DSCAL(nx,a,C(1,j),1)
+        enddo
+
+
+
+      RETURN
+      END
+      
+
+      SUBROUTINE iasq(C,nx,ny,cmin,cmax)
+
+cf2py intent(inplace) C
+cf2py integer intent(in), optional :: cmin = 0
+cf2py integer intent(in), optional :: cmax = -1
+cf2py intent(hide) nx,ny
+cf2py threadsafe
+
+      DOUBLE PRECISION C(nx,ny), cn
+      INTEGER nx, ny, i, j, cmin, cmax
+
+      EXTERNAL DSCAL
+
+      if (cmax.EQ.-1) then
+          cmax = ny
+      end if
+
+
+        do j=cmin+1,cmax
+            do i=1,nx
+                cn = C(i,j)
+                C(i,j) = cn * cn
+            end do
+ !          CALL DSCAL(nx,a,C(1,j),1)
+        enddo
+
+
+      RETURN
+      END
+
+
+      SUBROUTINE iamul(C,A,nx,ny,cmin,cmax)
+
+cf2py intent(inplace) C
+cf2py intent(in) A
+cf2py integer intent(in), optional :: cmin = 0
+cf2py integer intent(in), optional :: cmax = -1
+cf2py intent(hide) nx,ny
+cf2py threadsafe
+
+      DOUBLE PRECISION C(nx,ny)
+      DOUBLE PRECISION A(nx,ny)
+      INTEGER nx, ny, i, j, cmin, cmax
+
+      EXTERNAL DSCAL
+
+      if (cmax.EQ.-1) then
+          cmax = ny
+      end if
+
+
+        do j=cmin+1,cmax
+            do i=1,nx
+                C(i,j) = C(i,j) * A(i,j)
+            end do
+ !          CALL DSCAL(nx,a,C(1,j),1)
+        enddo
+
+
+      RETURN
+      END

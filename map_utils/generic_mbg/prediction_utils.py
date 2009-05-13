@@ -5,10 +5,36 @@ from map_utils import asc_to_ndarray, get_header, exportAscii
 from scipy import ndimage, mgrid
 from histogram_utils import *
 import time
+import os
 
 __all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs',
             'display_asc','display_datapoints','histogram_reduce','histogram_finalize','maybe_convert','sample_reduce',
             'sample_finalize']
+
+def thread_partition_array(x):
+    "Partition work arrays for multithreaded addition and multiplication"
+    n_threads = int(os.environ['OMP_NUM_THREADS'])
+    if len(x.shape)>1:
+        maxind = x.shape[1]
+    else:
+        maxind = x.shape[0]
+    bounds = np.array(np.linspace(0, maxind, n_threads+1),dtype='int')
+    cmin = bounds[:-1]
+    cmax = bounds[1:]
+    return cmin,cmax
+
+def invlogit(x):
+    """A shape-preserving, in-place, threaded inverse logit function."""
+    if not x.flags['F_CONTIGUOUS']:
+        raise ValueError, 'x is not Fortran-contiguous'
+    cmin, cmax = thread_partition_array(x)        
+    pm.map_noreturn(iinvlogit, [(x,cmin[i],cmax[i]) for i in xrange(len(cmax))])
+    return x
+
+def fast_inplace_square(a):
+    cmin, cmax = thread_partition_array(a)
+    pm.map_noreturn(iasq, [(a,cmin[i],cmax[i]) for i in xrange(len(cmax))])
+    return a
 
 def maybe_convert(ra, field, dtype):
     """
@@ -175,9 +201,6 @@ def histogram_finalize(bins, q, hr):
         return out
     return fin
 
-def invlogit(x):
-    """A shape-preserving version of PyMC's invlogit."""
-    return pm.invlogit(x.ravel()).reshape(x.shape)
 
 # TODO: Use predictive_mean_and_variance
 def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, f_label, f_has_nugget, x_label, pred_cv_dict=None, nugget_label=None, postproc=None, finalize=None):
@@ -217,6 +240,8 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, f_label, f_has_nug
             produced.
     """
     
+    cmin, cmax = thread_partition_array(x)
+    
     products = dict(zip(fns, [None]*len(fns)))
     iter = np.arange(burn,len(chain.PyMCsamples),thin)
     n_per = total/len(iter)+1
@@ -237,26 +262,31 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, f_label, f_has_nug
     
     time_count = -np.inf
     
-    for j in xrange(len(iter)):
+    for k in xrange(len(iter)):
         
-        i = iter[j]
+        i = iter[k]
         
         if time.time() - time_count > 10:
             time_count = time.time()
-            print ((j*100)/len(iter)), '% complete'
-        
-        M_pred, S_pred = predictive_mean_and_std(chain, metadata, i, f_label, x_label, x, f_has_nugget, pred_cv_dict, nugget_label)        
+            print ((k*100)/len(iter)), '% complete'
+
+        M_pred, S_pred = predictive_mean_and_std(chain, metadata, i, f_label, x_label, x, f_has_nugget, pred_cv_dict, nugget_label)
         
         # Postprocess if necessary: logit, etc.
         norms = np.random.normal(size=n_per)
+        
         for j in xrange(n_per):
             surf = M_pred + S_pred * norms[j]
+            # surf = M_pred.copy(order='F')
+            # pm.map_noreturn(iaaxpy, [(surf, S_pred, norms[j], cmin[l], cmax[l]) for l in xrange(len(cmax))])
+            # print  np.abs(surf-S_pred*norms[j]).max()
             if postproc is not None:
                 surf = postproc(surf)
                         
             # Reduction step
             for f in fns:
                 products[f] = f(products[f], surf)
+
     
     if finalize is not None:
         return finalize(products, actual_total)
@@ -307,6 +337,7 @@ def vec_to_asc(vec, fname, out_fname, unmasked, path=''):
     exportAscii(out_conv.data,out_fname,header,True-out_conv.mask)
     
     return out
+    
 
 def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=False, pred_cv_dict=None, nugget_label=None):
     """
@@ -331,7 +362,6 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
         input_covariate_values = np.array([covariate_dict[key][0] for key in n])
 
     # How many times must a man condition a multivariate normal
-
     M = chain.group0.M[i]
     C = chain.group0.C[i]
 
@@ -346,17 +376,30 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
         nug = chain.PyMCsamples.cols.V[i]
         C_input += nug*np.eye(np.sum(logp_mesh.shape[:-1]))
     S_input = np.linalg.cholesky(C_input)
+    
 
     C_cross = C(logp_mesh, x) 
-    V_pred = C(x)
+
+    import warnings
+    warnings.warn('Computing diagonal C(x) as amp**2! Remind Anand to change this if your covariance is nonstationary.')
+    # V_pred = C(x)
+    V_pred = C.params['amp']**2
+
     if pred_cv_dict is not None:
         C_cross += np.dot(np.dot(input_covariate_values.T, prior_covariate_variance), pred_covariate_values)
-        V_pred += np.sum(np.dot(np.sqrt(prior_covariate_variance), pred_covariate_values)**2, axis=0)
+        V_pred = V_pred + np.sum(np.dot(np.sqrt(prior_covariate_variance), pred_covariate_values)**2, axis=0)
     if np.any(np.isnan(V_pred)):
         raise ValueError
 
-    SC_cross = pm.gp.trisolve(S_input,C_cross,uplo='L')
-    V_out = V_pred - np.sum(np.asarray(SC_cross)**2,axis=0)
+    SC_cross = pm.gp.trisolve(S_input,C_cross,uplo='L',inplace=True)
+    
+    for mat in S_input, C_cross, SC_cross:
+        if not mat.flags['F_CONTIGUOUS']:
+            raise ValueError, 'Matrix is not Fortran-contiguous, fix the covariance function.'
+
+    scc = np.asarray(SC_cross)
+    fast_inplace_square(scc)
+    V_out = V_pred - np.sum(scc,axis=0)
 
     try:
         f = chain.PyMCsamples.col(f_label)[i]
