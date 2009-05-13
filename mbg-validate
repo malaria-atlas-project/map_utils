@@ -96,6 +96,6 @@ samples = hdf5_to_samps(ch,meta,x,o.burn,o.thin,o.total,[sample_reduce],f_name, 
 # Write out
 
 hf_path, hf_basename  = os.path.split(o.hf_name)
-base_outname = mod_basename + '-' + os.path.splitext(hf_basename)[0]
+base_outname = os.path.splitext(hf_basename)[0]
 out_name = os.path.join(hf_path, base_outname + '-houldout-samps.csv')
 samples.tofile(out_name,sep=',')
