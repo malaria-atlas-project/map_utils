@@ -101,32 +101,44 @@ bins = np.linspace(0,1,o.n_bins)
 
 # Create utility fns
 
-def binfn(arr,n_bins=o.n_bins):
-    return np.array(arr*n_bins,dtype=int)
+if len(q)>0:
+    def binfn(arr,n_bins=o.n_bins):
+        return np.array(arr*n_bins,dtype=int)
 
-hsr = histogram_reduce(bins, binfn)
-hsf = histogram_finalize(bins, q, hsr)
+    hsr = histogram_reduce(bins, binfn)
+    hsf = histogram_finalize(bins, q, hsr)
 
-def finalize(prod, n):
+def finalize(prod, n, q=q):
     mean = prod[mean_reduce] / n
     var = prod[var_reduce] / n - mean**2
     std = np.sqrt(var)
     std_to_mean = std/mean
     out = {'mean': mean, 'var': var, 'std': std, 'std-to-mean':std_to_mean}
-    out.update(hsf(prod, n))
+    if len(q)>0:
+        out.update(hsf(prod, n))
     return out
 
+reduce_fns = [mean_reduce, var_reduce]
+if len(q)>0:
+    reduce_fns = reduce_fns + [hsr]
 
 # Create rasters
 
-products = hdf5_to_samps(ch,meta,x,o.burn,o.thin,o.total,[mean_reduce, var_reduce, hsr], f_name, f_has_nugget, x_name, covariate_dict, nugget_name, postproc, finalize)
+products = hdf5_to_samps(ch,meta,x,o.burn,o.thin,o.total,reduce_fns, f_name, f_has_nugget, x_name, covariate_dict, nugget_name, postproc, finalize)
 
 
 # Write out
 
 hf_path, hf_basename  = os.path.split(o.hf_name)
 base_outname = os.path.splitext(hf_basename)[0]
+map_dir = os.path.join(hf_path, base_outname+'-maps')
+try:
+    os.mkdir(map_dir)
+except OSError:
+    pass
+os.chdir(map_dir)
+
 for k,v in products.iteritems():
-    out_name = os.path.join(hf_path, base_outname + '-%s.asc'%k)
+    out_name = os.path.join('%s.asc'%k)
     print 'Generating output file %s'%(out_name)
-    q=vec_to_asc(v,o.mask_name,out_name,unmasked)
+    q=vec_to_asc(v,'../'+o.mask_name,out_name,unmasked)

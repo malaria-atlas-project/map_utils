@@ -6,7 +6,7 @@ cf2py threadsafe
       INTEGER nxk, i, k
       
       do i=1,nxi
-          k = min(ind(i)+1, nxk)
+          k = max(1, min(ind(i)+1, nxk))
           x(i,k) = x(i,k) + 1
       end do
 
@@ -72,28 +72,26 @@ cf2py threadsafe
       END   
 
 
-      SUBROUTINE iaaxpy(Y,X,a,nx,cmin,cmax)
+      SUBROUTINE iaaxpy(a,x,y,n,cmin,cmax)
 
-cf2py intent(inplace) Y
-cf2py intent(in) X,a
+cf2py intent(inplace) y
+cf2py intent(in) x,a
 cf2py integer intent(in), optional :: cmin = 0
 cf2py integer intent(in), optional :: cmax = -1
-cf2py intent(hide) nx
+cf2py intent(hide) n
 cf2py threadsafe
 
-      DOUBLE PRECISION Y(nx)
-      DOUBLE PRECISION X(nx),a
-      INTEGER nx, cmin, cmax
+      DOUBLE PRECISION y(n)
+      DOUBLE PRECISION x(n),a
+      INTEGER n, cmin, cmax
       EXTERNAL DAXPY
 
-      EXTERNAL DSCAL
-
       if (cmax.EQ.-1) then
-          cmax = nx
+          cmax = n
       end if
 
 
-      CALL DAXPY(cmax-cmin,a,X(cmin+1),1,Y(cmin+1),1)
+      CALL DAXPY(cmax-cmin,a,x(cmin+1),1,y(cmin+1),1)
 
 
       RETURN

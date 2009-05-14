@@ -240,7 +240,10 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, f_label, f_has_nug
             produced.
     """
     
-    cmin, cmax = thread_partition_array(x)
+    # Add constant mean
+    if pred_cv_dict is None:
+        pred_cv_dict = {}
+    pred_cv_dict['m'] = np.ones(x.shape[0])
     
     products = dict(zip(fns, [None]*len(fns)))
     iter = np.arange(burn,len(chain.PyMCsamples),thin)
@@ -260,6 +263,8 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, f_label, f_has_nug
     M_pred = np.empty(x.shape[0])
     V_pred = np.empty(x.shape[0])
     
+    cmin, cmax = thread_partition_array(M_pred)
+    
     time_count = -np.inf
     
     for k in xrange(len(iter)):
@@ -276,10 +281,12 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, f_label, f_has_nug
         norms = np.random.normal(size=n_per)
         
         for j in xrange(n_per):
-            surf = M_pred + S_pred * norms[j]
-            # surf = M_pred.copy(order='F')
-            # pm.map_noreturn(iaaxpy, [(surf, S_pred, norms[j], cmin[l], cmax[l]) for l in xrange(len(cmax))])
-            # print  np.abs(surf-S_pred*norms[j]).max()
+            # surf = M_pred
+            # surf = M_pred + S_pred * norms[j]
+
+            surf = M_pred.copy('F')
+            pm.map_noreturn(iaaxpy, [(norms[j], S_pred, surf, cmin[l], cmax[l]) for l in xrange(len(cmax))])
+            
             if postproc is not None:
                 surf = postproc(surf)
                         
@@ -352,14 +359,17 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
         - nugget_label : string
     """
 
-    if pred_cv_dict is not None:
-        n = pred_cv_dict.keys()
 
-        covariate_dict = meta.covariates[0]
-        prior_covariate_variance = np.diag([covariate_dict[key][1] for key in n])
+    if pred_cv_dict is None:
+        raise ValueError, 'No pred_cv_dict provided. You always have the constant term. Tell Anand.'
+            
+    n = pred_cv_dict.keys()
 
-        pred_covariate_values = np.array([pred_cv_dict[key] for key in n])
-        input_covariate_values = np.array([covariate_dict[key][0] for key in n])
+    covariate_dict = meta.covariates[0]
+    prior_covariate_variance = np.diag([covariate_dict[key][1] for key in n])
+
+    pred_covariate_values = np.array([pred_cv_dict[key] for key in n])
+    input_covariate_values = np.array([covariate_dict[key][0] for key in n])
 
     # How many times must a man condition a multivariate normal
     M = chain.group0.M[i]
@@ -397,8 +407,9 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
         if not mat.flags['F_CONTIGUOUS']:
             raise ValueError, 'Matrix is not Fortran-contiguous, fix the covariance function.'
 
-    scc = np.asarray(SC_cross)
+    scc = SC_cross.copy('F')
     fast_inplace_square(scc)
+    
     V_out = V_pred - np.sum(scc,axis=0)
 
     try:
