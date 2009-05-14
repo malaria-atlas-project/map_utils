@@ -2,9 +2,15 @@ from checkAndBuildPaths import checkAndBuildPaths
 from quantile_funs import *
 from getAsciiheaderFromTemplateHDF5 import *
 from exportAscii import *
-#from generic_mbg import *
+try:
+    from generic_mbg import *
+except:
+    print 'Failed to import generic_mbg'
 from exportHDF5asASCII import *
-#from variograms import *
+try:
+    from variograms import *
+except:
+    print 'Failed to import variograms'
 
 
 def validate_format_str(st):
