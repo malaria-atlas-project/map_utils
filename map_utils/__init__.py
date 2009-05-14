@@ -2,7 +2,9 @@ from checkAndBuildPaths import checkAndBuildPaths
 from quantile_funs import *
 from getAsciiheaderFromTemplateHDF5 import *
 from exportAscii import *
-from pymc_utils import *
+#from generic_mbg import *
+from exportHDF5asASCII import *
+#from variograms import *
 
 
 def validate_format_str(st):
@@ -46,4 +48,3 @@ def grid_convert(g, frm, to, validate=False):
     if not frm[3]==to[3]:
         g=g[:,::-1]
     return g
-
