@@ -34,7 +34,7 @@ def combine_st_inputs(lon,lat,t):
     data_mesh = np.vstack((lon, lat, t)).T 
     return data_mesh
     
-def add_standard_metadata(M, logp_mesh, covariate_dict, **others):
+def add_standard_metadata(M, logp_mesh, data_mesh, covariate_dict, **others):
     """
     Adds the standard metadata to an hdf5 archive.
     """
@@ -44,8 +44,12 @@ def add_standard_metadata(M, logp_mesh, covariate_dict, **others):
     weird_attrs = ['ti','vars_to_writeout','scale_params','amp_params']
     
     hf.createArray(hf.root.metadata, 'logp_mesh', logp_mesh[:])
+    hf.createArray(hf.root.metadata, 'data_mesh', data_mesh[:])
         
     hf.createVLArray(hf.root.metadata, 'covariates', tb.ObjectAtom())
+    for a,v in covariate_dict.itervalues():
+        if not len(a)==data_mesh.shape[0]:
+            raise ValueError, 'Recorded covariates must be of same length as data mesh. Tell Anand.'
     hf.root.metadata.covariates.append(covariate_dict)
         
     for name, val in others.iteritems():
@@ -55,7 +59,7 @@ def add_standard_metadata(M, logp_mesh, covariate_dict, **others):
         else:
             hf.createArray(hf.root.metadata, name, val)    
     
-def cd_and_C_eval(covariate_values, C, logp_mesh, fac=1e6):
+def cd_and_C_eval(covariate_values, C, data_mesh, ui=slice(None,None,None), fac=1e6):
     """
     Returns a {name: value, prior variance} dictionary
     and an evaluated covariance with covariates incorporated.
@@ -71,14 +75,16 @@ def cd_and_C_eval(covariate_values, C, logp_mesh, fac=1e6):
         covariate_dict[cname] = (cval, cov_var*fac)
         
     # Constant term
-    covariate_dict['m'] = (np.ones(logp_mesh.shape[0]), (np.sum(np.array(means)**2) + 1)*fac)
+    covariate_dict['m'] = (np.ones(data_mesh.shape[0]), (np.sum(np.array(means)**2) + 1)*fac)
+    logp_mesh = data_mesh[ui]
                     
     # The evaluation of the Covariance object, plus the nugget.
     @pm.deterministic(trace=False)
-    def C_eval(C=C):
+    def C_eval(C=C,ui=ui):
         out = C(logp_mesh, logp_mesh)
         for val,var in covariate_dict.itervalues():
-            out += np.outer(val,val)*var
+            valu = val[ui]
+            out += np.outer(valu,valu)*var
         return out
     
     return covariate_dict, C_eval
