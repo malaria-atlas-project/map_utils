@@ -418,9 +418,7 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
 
         if pred_cv_dict is not None:
             C_cross += np.dot(np.dot(input_covariate_values.T, prior_covariate_variance), pcv)
-            V_pred = V_pred + np.sum(np.dot(np.sqrt(prior_covariate_variance), pcv)**2, axis=0)
-        if np.any(np.isnan(V_pred)):
-            raise ValueError
+            V_pred_adj = V_pred + np.sum(np.dot(np.sqrt(prior_covariate_variance), pcv)**2, axis=0)
 
         SC_cross = pm.gp.trisolve(S_input,C_cross,uplo='L',inplace=True)
     
@@ -431,7 +429,7 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
         scc = SC_cross.copy('F')
         fast_inplace_square(scc)
     
-        V_out[i_chunk] = V_pred - np.sum(scc,axis=0)
+        V_out[i_chunk] = V_pred_adj - np.sum(scc,axis=0)
         M_out[i_chunk] = M_pred[i_chunk] + np.asarray(np.dot(SC_cross.T,pm.gp.trisolve(S_input, (f-M_input), uplo='L'))).squeeze()
 
     # from IPython.Debugger import Pdb
