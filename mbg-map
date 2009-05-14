@@ -1,11 +1,6 @@
 #!/usr/bin/python
 
 from optparse import OptionParser
-from map_utils import *
-import tables as tb
-import numpy as np
-import os, imp, sys
-
 
 # Create option parser
 req_doc = """
@@ -34,11 +29,8 @@ p.set_defaults(raster_thin=1)
 p.set_defaults(thin=10)
 p.set_defaults(total=20000)
 p.set_defaults(bufsize=0)
-p.set_defaults(year=np.nan)
+p.set_defaults(year=None)
 p.set_defaults(quantile_list='0.05 0.25 0.5 0.75 0.95')
-
-
-(o, args) = p.parse_args()
 
 (o, args) = p.parse_args()
 if len(args) != 4:
@@ -47,6 +39,11 @@ if len(args) != 4:
 o.module, o.hf_name, o.burn, o.mask_name = args
 o.burn = int(o.burn)
 
+
+from map_utils import *
+import tables as tb
+import numpy as np
+import os, imp, sys, time
 
 # Load up given module and load its relevant contents
 
@@ -88,7 +85,7 @@ else:
 # Create predictive locations and open hdf5 archive
 
 x, unmasked = asc_to_locs(o.mask_name,thin=o.raster_thin, bufsize=o.bufsize)
-if not np.isnan(o.year):
+if not o.year is None:
     x = np.vstack((x.T,year*np.ones(x.shape[0]))).T
     
 hf = tb.openFile(o.hf_name)
@@ -124,7 +121,9 @@ if len(q)>0:
 
 # Create rasters
 
+t_start = time.time()
 products = hdf5_to_samps(ch,meta,x,o.burn,o.thin,o.total,reduce_fns, f_name, f_has_nugget, x_name, covariate_dict, nugget_name, postproc, finalize)
+print '\nMaps produced in %f seconds\n'%(time.time() - t_start)
 
 
 # Write out

@@ -1,17 +1,6 @@
 #!/usr/bin/python
-import matplotlib
-matplotlib.use('PDF')
-matplotlib.interactive(False)
-
 from optparse import OptionParser
-from map_utils import *
-import tables as tb
-import numpy as np
-import os, imp, sys
-import pymc as pm
-from pylab import csv2rec, rec2csv
-
-# run /Users/anand/renearch/map_utils/infer cov_test test_db test_data.csv -t 10 -n 8
+import os
 
 # Create option parser
 
@@ -45,6 +34,19 @@ if len(args) != 3:
     raise IOError, 'You must supply exactly four positional arguments. You supplied %i.'%len(args)
 
 o.module, o.hf_name, o.input_name = args
+
+
+import matplotlib
+matplotlib.use('PDF')
+matplotlib.interactive(False)
+
+from map_utils import *
+import tables as tb
+import numpy as np
+import imp, sys
+import pymc as pm
+from pylab import csv2rec, rec2csv
+import time
 
 
 # Figure out what the database file is supposed to be
@@ -125,8 +127,9 @@ for s in M.stochastics:
 
 
 # Run MCMC
-
+t_start = time.time()
 M.isample(o.total,0,o.thin)
+print '\nMCMC completed in %f seconds\n'%(time.time() - t_start)
 
 
 # Write out

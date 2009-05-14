@@ -1,15 +1,6 @@
 #!/usr/bin/python
-import matplotlib
-matplotlib.use('PDF')
-matplotlib.interactive(False)
 
 from optparse import OptionParser
-from map_utils import *
-import tables as tb
-import numpy as np
-import os, imp, sys
-import pylab as pl
-
 
 # Create option parser
 req_doc = """
@@ -31,6 +22,17 @@ if len(args) != 1:
     raise ValueError, 'You must supply exactly one positional arguments. You supplied %i.'%len(args)
 
 o.module = args[0]
+
+
+import matplotlib
+matplotlib.use('PDF')
+matplotlib.interactive(False)
+
+from map_utils import *
+import tables as tb
+import numpy as np
+import os, imp, sys
+import pylab as pl
 
 
 # Load up given module and load its relevant contents

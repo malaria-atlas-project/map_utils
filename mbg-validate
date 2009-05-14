@@ -1,18 +1,6 @@
 #!/usr/bin/python
 
-import matplotlib
-matplotlib.use('PDF')
-matplotlib.interactive(False)
-
 from optparse import OptionParser
-from map_utils import *
-import tables as tb
-import numpy as np
-import os, imp, sys
-
-from pylab import csv2rec
-
-# run /Users/anand/renearch/map_utils/validate cov_test test_db 500 test_data.csv -t 1
 
 # Create option parser
 req_doc = """
@@ -44,7 +32,19 @@ if len(args) != 4:
 
 o.module, o.hf_name, o.burn, o.pred_input = args
 o.burn = int(o.burn)
-    
+
+
+
+import matplotlib
+matplotlib.use('PDF')
+matplotlib.interactive(False)
+
+from map_utils import *
+import tables as tb
+import numpy as np
+import os, imp, sys, time
+
+from pylab import csv2rec    
 
 # Load up given module and load its relevant contents
 
@@ -89,8 +89,9 @@ meta = hf.root.metadata
 
 
 # Create predictive samples
-
+t1 = time.time()
 samples = hdf5_to_samps(ch,meta,x,o.burn,o.thin,o.total,[sample_reduce],f_name, f_has_nugget,x_name,covariate_dict,nugget_name,postproc,sample_finalize)
+print '\nPredictive samples drawn in %f seconds\n'%(time.time() - t_start)
 
 
 # Write out
