@@ -4,7 +4,7 @@ from getAsciiheaderFromTemplateHDF5 import *
 from exportAscii import *
 #from generic_mbg import *
 from exportHDF5asASCII import *
-from variograms import *
+#from variograms import *
 
 
 def validate_format_str(st):
