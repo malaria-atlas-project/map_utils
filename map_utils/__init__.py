@@ -2,7 +2,7 @@ from checkAndBuildPaths import checkAndBuildPaths
 from quantile_funs import *
 from getAsciiheaderFromTemplateHDF5 import *
 from exportAscii import *
-from generic_mbg import *
+#from generic_mbg import *
 from exportHDF5asASCII import *
 from variograms import *
 
