@@ -19,7 +19,7 @@ req_doc = """
                         be generated in ascii files with identical masks.
 """
 p = OptionParser('usage: %prog module database-file burn mask [options]' + req_doc)
-p.add_option('-n','--n-bins',help='The number of bins to use when creating histograms. Defaults to 1000.',dest='n_bins',type='int')
+p.add_option('-n','--n-bins',help='The number of bins to use when creating histograms. Defaults to 100.',dest='n_bins',type='int')
 p.add_option('-b','--bufsize',help='The size of the buffer to use, in pixels. Use 0 if raster_thin=1. Defaults to 0.',dest='bufsize',type='int')
 p.add_option('-q','--quantiles',help="The quantile maps to generate. Should be in the form '0.05 0.25 0.5 0.75 0.95', and the inverted commas are important! Defaults to '0.05 0.25 0.5 0.75 0.95'",dest='quantile_list')
 p.add_option('-r','--raster_thin',help='The raster will be kriged at this level of degradation, then regridded. Set to 1 for final maps, ~10 for mild curiosity. Defaults to 1.',dest='raster_thin',type='int')
@@ -28,7 +28,7 @@ p.add_option('-i','--iter',help='The total number of samples to use in generatin
 p.add_option('-c','--covariates',help="The names and filenames of the covariates to use. Should be in the form 'rain rain.asc snow snow.asc', and the inverted commas are important! Defaults to None.",dest='covariate_list')
 p.add_option('-y','--year',help='The DECIMAL YEAR SINCE 2009 at which the map should be produced. Required for space-time models.',dest='year',type='float')
 
-p.set_defaults(n_bins=1000)
+p.set_defaults(n_bins=100)
 p.set_defaults(covariate_list=None)
 p.set_defaults(raster_thin=1)
 p.set_defaults(thin=10)
