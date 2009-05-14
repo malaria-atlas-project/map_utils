@@ -88,7 +88,6 @@ def basic_spatial_submodel(lon, lat, covariate_values, prior_params = {}):
     # The evaluation of the Covariance object, plus the nugget.
     @pm.deterministic(trace=False)
     def C_eval(C=C):
-        """THIS LEAKS MEMORY"""
         out = C(logp_mesh, logp_mesh)
         return out
     
