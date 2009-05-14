@@ -10,6 +10,8 @@ import os
 __all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps','vec_to_asc','asc_to_locs',
             'display_asc','display_datapoints','histogram_reduce','histogram_finalize','maybe_convert','sample_reduce',
             'sample_finalize']
+            
+memmax = 2.e8
 
 def thread_partition_array(x):
     "Partition work arrays for multithreaded addition and multiplication"
@@ -254,11 +256,11 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, f_label, f_has_nug
     x_obs = getattr(metadata,x_label)[:]
     
     # Avoid memory errors
-    max_chunksize = 1.e8 / x_obs.shape[0]
-    n_chunks = int(x.shape[0]/max_chunksize+1)
-    splits = np.array(np.linspace(0,x.shape[0],n_chunks+1)[1:-1],dtype='int')
-    x_chunks = np.split(x,splits)
-    i_chunks = np.split(np.arange(x.shape[0]), splits)
+    # max_chunksize = 1.e8 / x_obs.shape[0]
+    # n_chunks = int(x.shape[0]/max_chunksize+1)
+    # splits = np.array(np.linspace(0,x.shape[0],n_chunks+1)[1:-1],dtype='int')
+    # x_chunks = np.split(x,splits)
+    # i_chunks = np.split(np.arange(x.shape[0]), splits)
     
     M_pred = np.empty(x.shape[0])
     V_pred = np.empty(x.shape[0])
@@ -378,6 +380,19 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
     logp_mesh = getattr(meta,x_label)[:]    
     M_input = M(logp_mesh)
     M_pred = M(x)
+    
+    V_out = np.empty(M_pred.shape)
+    M_out = np.empty(M_pred.shape)
+    
+    import warnings
+    warnings.warn('Computing diagonal C(x) as amp**2! Remind Anand to change this if your covariance is nonstationary.')
+    # V_pred = C(x)
+    V_pred = C.params['amp']**2
+    
+    try:
+        f = chain.PyMCsamples.col(f_label)[i]
+    except:
+        f = getattr(meta,f_label)[:]
 
     C_input = C(logp_mesh, logp_mesh)
     if pred_cv_dict is not None:
@@ -387,37 +402,37 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
         C_input += nug*np.eye(np.sum(logp_mesh.shape[:-1]))
     S_input = np.linalg.cholesky(C_input)
     
+    max_chunksize = memmax / 8 / logp_mesh.shape[0]
+    n_chunks = int(x.shape[0]/max_chunksize+1)
+    splits = np.array(np.linspace(0,x.shape[0],n_chunks+1),dtype='int')
+    x_chunks = np.split(x,splits[1:-1])
+    i_chunks = [slice(splits[i],splits[i+1],None) for i in xrange(n_chunks)]
 
-    C_cross = C(logp_mesh, x) 
+    for i in xrange(n_chunks):
+        i_chunk = i_chunks[i]
+        x_chunk = x_chunks[i]
+        
+        pcv = pred_covariate_values[:,i_chunk]
 
-    import warnings
-    warnings.warn('Computing diagonal C(x) as amp**2! Remind Anand to change this if your covariance is nonstationary.')
-    # V_pred = C(x)
-    V_pred = C.params['amp']**2
+        C_cross = C(logp_mesh, x_chunk) 
 
-    if pred_cv_dict is not None:
-        C_cross += np.dot(np.dot(input_covariate_values.T, prior_covariate_variance), pred_covariate_values)
-        V_pred = V_pred + np.sum(np.dot(np.sqrt(prior_covariate_variance), pred_covariate_values)**2, axis=0)
-    if np.any(np.isnan(V_pred)):
-        raise ValueError
+        if pred_cv_dict is not None:
+            C_cross += np.dot(np.dot(input_covariate_values.T, prior_covariate_variance), pcv)
+            V_pred = V_pred + np.sum(np.dot(np.sqrt(prior_covariate_variance), pcv)**2, axis=0)
+        if np.any(np.isnan(V_pred)):
+            raise ValueError
 
-    SC_cross = pm.gp.trisolve(S_input,C_cross,uplo='L',inplace=True)
+        SC_cross = pm.gp.trisolve(S_input,C_cross,uplo='L',inplace=True)
     
-    for mat in S_input, C_cross, SC_cross:
-        if not mat.flags['F_CONTIGUOUS']:
-            raise ValueError, 'Matrix is not Fortran-contiguous, fix the covariance function.'
+        for mat in S_input, C_cross, SC_cross:
+            if not mat.flags['F_CONTIGUOUS']:
+                raise ValueError, 'Matrix is not Fortran-contiguous, fix the covariance function.'
 
-    scc = SC_cross.copy('F')
-    fast_inplace_square(scc)
+        scc = SC_cross.copy('F')
+        fast_inplace_square(scc)
     
-    V_out = V_pred - np.sum(scc,axis=0)
-
-    try:
-        f = chain.PyMCsamples.col(f_label)[i]
-    except:
-        f = getattr(meta,f_label)[:]
-
-    M_out = M_pred + np.asarray(np.dot(SC_cross.T,pm.gp.trisolve(S_input, (f-M_input), uplo='L'))).squeeze()
+        V_out[i_chunk] = V_pred - np.sum(scc,axis=0)
+        M_out[i_chunk] = M_pred[i_chunk] + np.asarray(np.dot(SC_cross.T,pm.gp.trisolve(S_input, (f-M_input), uplo='L'))).squeeze()
 
     # from IPython.Debugger import Pdb
     # Pdb(color_scheme='Linux').set_trace()   
