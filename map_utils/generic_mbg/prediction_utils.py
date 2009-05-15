@@ -249,6 +249,8 @@ def hdf5_to_samps(chain, metadata, x, burn, thin, total, fns, f_label, f_has_nug
     
     products = dict(zip(fns, [None]*len(fns)))
     iter = np.arange(burn,len(chain.PyMCsamples),thin)
+    if len(iter)==0:
+        raise ValueError, 'You asked for %i burnin iterations with thinnnig %i but the chain is only %i iterations long.'%(burn, thin, len(chain.PyMCsamples))
     n_per = total/len(iter)+1
     actual_total = n_per * len(iter)
     
@@ -327,6 +329,9 @@ def vec_to_asc(vec, fname, out_fname, unmasked, path=''):
         out = data
     else:
         out = np.ma.masked_array(ndimage.map_coordinates(data_thin, mapgrid), mask=data.mask)
+        
+    if np.any(np.isnan(out)):
+        raise ValueError, 'NaN in output'
     
     # import pylab as pl
     # pl.close('all')

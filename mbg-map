@@ -39,11 +39,16 @@ if len(args) != 4:
 o.module, o.hf_name, o.burn, o.mask_name = args
 o.burn = int(o.burn)
 
+import matplotlib
+matplotlib.use('PDF')
+matplotlib.interactive(False)
 
 from map_utils import *
 import tables as tb
 import numpy as np
 import os, imp, sys, time
+
+import pylab as pl
 
 # Load up given module and load its relevant contents
 
@@ -141,3 +146,10 @@ for k,v in products.iteritems():
     out_name = os.path.join('%s.asc'%k)
     print 'Generating output file %s'%(out_name)
     q=vec_to_asc(v,'../'+o.mask_name,out_name,unmasked)
+
+    lon, lat, data= asc_to_ndarray(out_name) 
+    pl.clf()
+    pl.imshow(grid_convert(data,'y+x+','y-x+'), extent=[lon.min(), lon.max(), lat.min(), lat.max()])
+    pl.colorbar()
+    pl.plot(meta.data_mesh[:,0]*180./np.pi,meta.data_mesh[:,1]*180./np.pi,'r.',markersize=2)
+    pl.savefig('%s.pdf'%k)
