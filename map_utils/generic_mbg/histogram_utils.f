@@ -72,6 +72,7 @@ cf2py threadsafe
       END   
 
 
+
       SUBROUTINE iaaxpy(a,x,y,n,cmin,cmax)
 
 cf2py intent(inplace) y
@@ -92,6 +93,40 @@ cf2py threadsafe
 
 
       CALL DAXPY(cmax-cmin,a,x(cmin+1),1,y(cmin+1),1)
+
+
+      RETURN
+      END
+
+
+      SUBROUTINE icsum(C,x,d,y,nx,ny,nd,cmin,cmax)
+
+cf2py intent(inplace) C
+cf2py intent(in) x,d,y
+cf2py integer intent(in), optional :: cmin = 0
+cf2py integer intent(in), optional :: cmax = -1
+cf2py intent(hide) nx,ny,nd
+cf2py threadsafe
+
+      DOUBLE PRECISION C(nx,ny)
+      DOUBLE PRECISION x(nd,nx),d(nd),y(nd,ny)
+      INTEGER nx, ny, nd, i, j, k, cmin, cmax
+
+      EXTERNAL DSCAL
+
+      if (cmax.EQ.-1) then
+          cmax = ny
+      end if
+
+
+        do j=cmin+1,cmax
+            do i=1,nx
+                do k=1,nd
+                    C(i,j) = C(i,j) + x(k,i)*d(k)*y(k,j)
+                end do
+            end do
+        enddo
+
 
 
       RETURN
@@ -153,6 +188,39 @@ cf2py threadsafe
             do i=1,nx
                 cn = C(i,j)
                 C(i,j) = cn * cn
+            end do
+ !          CALL DSCAL(nx,a,C(1,j),1)
+        enddo
+
+
+      RETURN
+      END
+
+
+      SUBROUTINE asqs(C,S,nx,ny,cmin,cmax)
+
+cf2py intent(in) C
+cf2py intent(inplace) S
+cf2py integer intent(in), optional :: cmin = 0
+cf2py integer intent(in), optional :: cmax = -1
+cf2py intent(hide) nx,ny
+cf2py threadsafe
+
+      DOUBLE PRECISION C(nx,ny), cn, S(ny)
+      INTEGER nx, ny, i, j, cmin, cmax
+
+      EXTERNAL DSCAL
+
+      if (cmax.EQ.-1) then
+          cmax = ny
+      end if
+
+
+        do j=cmin+1,cmax
+            S(j) = 0.0D0
+            do i=1,nx
+                cn = C(i,j)
+                S(j) = S(j) + cn * cn
             end do
  !          CALL DSCAL(nx,a,C(1,j),1)
         enddo

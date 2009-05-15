@@ -11,7 +11,7 @@ __all__ = ['grid_convert','mean_reduce','var_reduce','invlogit','hdf5_to_samps',
             'display_asc','display_datapoints','histogram_reduce','histogram_finalize','maybe_convert','sample_reduce',
             'sample_finalize']
             
-memmax = 2.e8
+memmax = 2.5e8
 
 def thread_partition_array(x):
     "Partition work arrays for multithreaded addition and multiplication"
@@ -37,6 +37,16 @@ def fast_inplace_square(a):
     cmin, cmax = thread_partition_array(a)
     pm.map_noreturn(iasq, [(a,cmin[i],cmax[i]) for i in xrange(len(cmax))])
     return a
+    
+def square_and_sum(a,s):
+    cmin, cmax = thread_partition_array(a)
+    pm.map_noreturn(asqs, [(a,s,cmin[i],cmax[i]) for i in xrange(len(cmax))])
+    return a
+    
+def crossmul_and_sum(c,x,d,y):
+    cmin, cmax = thread_partition_array(y)
+    pm.map_noreturn(icsum, [(c,x,d,y,cmin[i],cmax[i]) for i in xrange(len(cmax))])
+    return c
 
 def maybe_convert(ra, field, dtype):
     """
@@ -366,7 +376,6 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
         - nugget_label : string
     """
 
-
     if pred_cv_dict is None:
         raise ValueError, 'No pred_cv_dict provided. You always have the constant term. Tell Anand.'
             
@@ -375,8 +384,11 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
     covariate_dict = meta.covariates[0]
     prior_covariate_variance = np.diag([covariate_dict[key][1] for key in n])
 
-    pred_covariate_values = np.array([pred_cv_dict[key] for key in n])
-    input_covariate_values = np.array([covariate_dict[key][0] for key in n])
+    pred_covariate_values = np.empty((len(pred_cv_dict), x.shape[0]), order='F')
+    input_covariate_values = np.empty((len(pred_cv_dict), len(covariate_dict[key][0])), order='F')
+    for i in xrange(len(n)):
+        pred_covariate_values[i,:] = pred_cv_dict[n[i]]
+        input_covariate_values[i,:] = covariate_dict[n[i]][0]
 
     # How many times must a man condition a multivariate normal
     M = chain.group0.M[i]
@@ -398,7 +410,7 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
         f = chain.PyMCsamples.col(f_label)[i]
     except:
         f = getattr(meta,f_label)[:]
-
+                
     C_input = C(logp_mesh, logp_mesh)
     if pred_cv_dict is not None:
         C_input += np.dot(np.dot(input_covariate_values.T, prior_covariate_variance), input_covariate_values)
@@ -414,27 +426,33 @@ def predictive_mean_and_std(chain, meta, i, f_label, x_label, x, f_has_nugget=Fa
     i_chunks = [slice(splits[i],splits[i+1],None) for i in xrange(n_chunks)]
 
     for i in xrange(n_chunks):
+
         i_chunk = i_chunks[i]
         x_chunk = x_chunks[i]
         
         pcv = pred_covariate_values[:,i_chunk]
-
         C_cross = C(logp_mesh, x_chunk) 
-
+        
+        for mat in [input_covariate_values, pcv, C_cross]:
+            if not mat.flags['F_CONTIGUOUS']:
+                raise ValueError, 'Matrix is not Fortran-contiguous'
+        
         if pred_cv_dict is not None:
-            C_cross += np.dot(np.dot(input_covariate_values.T, prior_covariate_variance), pcv)
+            # C_cross += np.dot(np.dot(input_covariate_values.T, prior_covariate_variance), pcv)
+            # icsum(C_cross, input_covariate_values.T,np.diag(prior_covariate_variance), pcv)
+            C_cross = crossmul_and_sum(C_cross, input_covariate_values, np.diag(prior_covariate_variance), pcv)
             V_pred_adj = V_pred + np.sum(np.dot(np.sqrt(prior_covariate_variance), pcv)**2, axis=0)
-
+                        
         SC_cross = pm.gp.trisolve(S_input,C_cross,uplo='L',inplace=True)
-    
+
         for mat in S_input, C_cross, SC_cross:
             if not mat.flags['F_CONTIGUOUS']:
                 raise ValueError, 'Matrix is not Fortran-contiguous, fix the covariance function.'
 
-        scc = SC_cross.copy('F')
-        fast_inplace_square(scc)
-    
-        V_out[i_chunk] = V_pred_adj - np.sum(scc,axis=0)
+        scc = np.empty(x_chunk.shape[0])
+        square_and_sum(SC_cross, scc)
+        
+        V_out[i_chunk] = V_pred_adj - scc
         M_out[i_chunk] = M_pred[i_chunk] + np.asarray(np.dot(SC_cross.T,pm.gp.trisolve(S_input, (f-M_input), uplo='L'))).squeeze()
 
     # from IPython.Debugger import Pdb
