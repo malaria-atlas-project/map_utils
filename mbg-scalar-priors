@@ -74,6 +74,7 @@ def g(obj):
 
 scalar_variables = filter(g, M.stochastics | M.deterministics)
 scalar_stochastics = filter(lambda a: isinstance(a, pm.Stochastic), scalar_variables)
+M2 = pm.Model(scalar_stochastics)
 
 
 
@@ -82,8 +83,7 @@ scalar_stochastics = filter(lambda a: isinstance(a, pm.Stochastic), scalar_varia
 res = dict(zip(scalar_variables, [[] for v in scalar_variables]))
 
 for i in xrange(o.iter):
-    for s in scalar_stochastics:
-        s.rand()
+    M2.draw_from_prior()
     for v in scalar_variables:
         res[v].append(v.value)
         
