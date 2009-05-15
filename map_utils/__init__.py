@@ -2,10 +2,6 @@ from checkAndBuildPaths import checkAndBuildPaths
 from quantile_funs import *
 from getAsciiheaderFromTemplateHDF5 import *
 from exportAscii import *
-try:
-    from generic_mbg import *
-except:
-    print 'Failed to import generic_mbg'
 from exportHDF5asASCII import *
 try:
     from variograms import *

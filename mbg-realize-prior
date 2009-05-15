@@ -1,3 +1,0 @@
-#!/usr/bin/python
-
-raise NotImplementedError, 'This program does not do anything yet.'
