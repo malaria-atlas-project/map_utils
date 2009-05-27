@@ -9,7 +9,6 @@ def get_header(fname, path='./'):
     Returns it along with the rest of the file.
     """
     f = file(path+fname,'r')
-    f.close()
     
     header = {}
     headlines = 0
@@ -28,6 +27,7 @@ def get_header(fname, path='./'):
         header[key] = val
         headlines += 1
     
+    f.close()
 
     for key in ['ncols','nrows','cellsize','xllcorner','yllcorner']:
         if not header.has_key(key):
