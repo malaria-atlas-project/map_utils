@@ -9,8 +9,10 @@ def get_header(fname, path='./'):
     Returns it along with the rest of the file.
     """
     f = file(path+fname,'r')
+    f.close()
     
     header = {}
+    headlines = 0
     
     while True:
         line = f.readline()
@@ -24,13 +26,14 @@ def get_header(fname, path='./'):
         except:
             val = float(val)
         header[key] = val
+        headlines += 1
     
 
     for key in ['ncols','nrows','cellsize','xllcorner','yllcorner']:
         if not header.has_key(key):
             raise KeyError, 'File %s header does not contain key %s'%(path+fname, key)
     
-    return header, f
+    return header, headlines
     
 
 def asc_to_ndarray(fname, path='./'):
@@ -38,7 +41,11 @@ def asc_to_ndarray(fname, path='./'):
     Extracts long, lat, data from an ascii-format file.
     Data is a masked array if the header contains NODATA_value
     """
-    header, f = get_header(fname, path)
+    header, headlines = get_header(fname, path)
+    f = file(path+fname,'r')
+    
+    for i in xrange(headlines):
+        f.readline()    
     
     ncols = header['ncols']
     nrows = header['nrows']
@@ -63,8 +70,7 @@ def reexport_ascii(fname, path='./'):
     Useful if, for example, the generated ascii file doesn't have 
     Windows returns.
     """
-    header, f = get_header(fname, path)
-    f.close()
+    header, headlines = get_header(fname, path)
     
     long, lat, data = asc_to_ndarray(fname, path)
     

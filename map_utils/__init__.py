@@ -39,7 +39,7 @@ def grid_convert(g, frm, to, validate=False):
     if validate:
         for st in [frm, to]:
             validate_format_str(st)
-        
+    
     # Transpose if necessary
     if not frm[0]==to[0]:
         g = g.T
