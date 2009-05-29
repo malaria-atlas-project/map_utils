@@ -1,7 +1,7 @@
 import numpy as np
 import string
 
-__all__ = ['asc_to_ndarray','exportAscii', 'get_header', 'reexport_ascii']
+__all__ = ['asc_to_ndarray','exportAscii', 'get_header', 'reexport_ascii','exportAscii2']
 
 def get_header(fname, path='./'):
     """"
@@ -24,6 +24,8 @@ def get_header(fname, path='./'):
             val = int(val)
         except:
             val = float(val)
+        if key != 'NODATA_value':
+            key = key.lower()
         header[key] = val
         headlines += 1
     
@@ -77,6 +79,7 @@ def reexport_ascii(fname, path='./'):
     exportAscii(data.data, fname, header, True-data.mask)
 
 def exportAscii (arr,filename,headerDict,mask=0):
+    "Exports an array and a header to ascii"
 
     import numpy as np
     
@@ -106,3 +109,17 @@ def exportAscii (arr,filename,headerDict,mask=0):
         f.write('\r\n')
 
     f.close()
+
+def exportAscii2(lon,lat,data,filename):
+    "Exports longitude and latitude vectors and a data array to ascii."
+    if data.shape != (len(lat),len(lon)):
+        raise ValueError, 'Data is wrong shape'
+
+    data.fill_value=-9999
+    header = {'ncols': len(lon),
+                'nrows': len(lat),
+                'cellsize': lon[1]-lon[0],
+                'xllcorner': lon.min(),
+                'yllcorner': lat.min(),
+                'NODATA_value': data.fill_value}
+    exportAscii(data.filled(),filename,header,True-data.mask)
