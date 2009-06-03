@@ -8,6 +8,10 @@ try:
 except:
     print 'Failed to import variograms'
 
+try:
+    from shapefile_utils import *
+except:
+    print 'Failed to import shapefiles'
 
 def validate_format_str(st):
     for i in [0,2]:
