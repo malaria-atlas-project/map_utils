@@ -7,7 +7,7 @@ from shapely import geometry, iterops, wkb, wkt
 import shapely.geometry as geom
 from csv import reader
 
-__all__ = ['polygon_area', 'unit_to_grid', 'exclude_ues', 'plot_unit', 'obj_to_poly', 'NonSuckyShapeFile']
+__all__ = ['polygon_area', 'unit_to_grid', 'exclude_ues', 'plot_unit', 'obj_to_poly', 'NonSuckyShapefile']
 
 def polygon_area(v):
     """
