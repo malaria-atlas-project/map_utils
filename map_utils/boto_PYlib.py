@@ -5,7 +5,7 @@
 
 # set location of file containng keys to S3
 #keyPath = '/root/s3code.txt'
-import extract_params
+#import extract_params
 
 # import libraries
 import boto
