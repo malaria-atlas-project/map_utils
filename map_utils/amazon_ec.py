@@ -288,7 +288,7 @@ def map_jobs(RESERVATIONID, NINSTANCES, MAXJOBSPERINSTANCE, MAXJOBTRIES,cmds, in
                         while p.poll() is None:
                             print '\t\tWaiting for %i...'%p.pid
                             print 't18'
-                            time.seep(10)
+                            time.sleep(10)
                             print 't19'
                         retval = p.poll()
                         print 't20'
