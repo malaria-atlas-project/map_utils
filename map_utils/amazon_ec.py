@@ -273,7 +273,7 @@ def map_jobs(RESERVATIONID, NINSTANCES, MAXJOBSPERINSTANCE, MAXJOBTRIES,cmds, in
                         if retval:
                             raise ValueError, 'Upload failed! Output:\n' + p.stdout.read()
                 if init_cmds is not None:
-                    print 't13
+                    print 't13'
                     print '\n\tExecuting initial commands on %s'%e
                     for init_cmd in init_cmds:
                         print 't14'
