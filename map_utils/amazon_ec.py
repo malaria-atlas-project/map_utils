@@ -241,36 +241,57 @@ def map_jobs(RESERVATIONID, NINSTANCES, MAXJOBSPERINSTANCE, MAXJOBTRIES,cmds, in
         print 'Job Status:    '+str(NjobsRunning)+' running;    '+str(TotalCompleteOK)+' completed successfully;    '+str(TotalFailures)+' failures.'
     
         # Watch engines to see when they come alive.
+        print 't1'
         for e in spawning_engines:
             if e.update()==u'running':
                 print '\n%s is up'%e
+                print 't2'
                 e.PendingJoblist = []
+                print 't3'
                 spawning_engines.remove(e)
+                print 't4'
                 running_engines.append(e)
+                print 't5'
                 if upload_files is not None:
+                    print 't6'
                     print '\n\tUploading files to %s'%e
+                    print 't7'
                     for upload_file in upload_files:
+                        print 't8'
                         print '\t'+upload_file
+                        print 't9'
                         #p = Popen(init_scp_str +  ' %s root@%s:%s'%(upload_file, e.dns_name, upload_file.split("/")[-1]), shell=True, stdout=PIPE,stderr=STDOUT)
                         stdout = file(str(STDOUTPATH)+'stdout_upload_'+str(e).rpartition(':')[-1]+'_'+str(upload_file).rpartition('/')[-1]+'.txt','w')
+                        print 't10'
                         stderr = file(str(STDOUTPATH)+'stderr_upload_'+str(e).rpartition(':')[-1]+'_'+str(upload_file).rpartition('/')[-1]+'.txt','w') 
+                        print 't11'
                         p = Popen(init_scp_str +  ' %s root@%s:%s'%(upload_file, e.dns_name, upload_file.split("/")[-1]), shell=True, stdout=stdout,stderr=stderr)
+                        print 't11'
 
                         retval = p.wait()
+                        print 't12'
                         if retval:
                             raise ValueError, 'Upload failed! Output:\n' + p.stdout.read()
                 if init_cmds is not None:
+                    print 't13
                     print '\n\tExecuting initial commands on %s'%e
                     for init_cmd in init_cmds:
+                        print 't14'
                         print '\t$ %s'%init_cmd
                         #p = Popen(init_ssh_str + ' root@%s '%e.dns_name+ init_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
                         stdout = file(str(STDOUTPATH)+'stdout_initial_'+str(e).rpartition(':')[-1]+'_'+str(init_cmd).rpartition('/')[-1].strip('"')+'.txt','w')
+                        print 't15'
                         stderr = file(str(STDOUTPATH)+'stderr_initial_'+str(e).rpartition(':')[-1]+'_'+str(init_cmd).rpartition('/')[-1].strip('"')+'.txt','w') 
+                        print 't16'
                         p = Popen(init_ssh_str + ' root@%s '%e.dns_name+ init_cmd, shell=True, stdout=stdout, stderr=stderr)
+                        print 't17'
                         while p.poll() is None:
                             print '\t\tWaiting for %i...'%p.pid
-                            time.sleep(10)
+                            print 't18'
+                            time.seep(10)
+                            print 't19'
                         retval = p.poll()
+                        print 't20'
                         if retval:
                             raise ValueError, 'Initial command failed! Output:\n' + p.stdout.read()
                         print '\tSuccessful.'
