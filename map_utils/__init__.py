@@ -5,7 +5,7 @@ from exportAscii import *
 from exportHDF5asASCII import *
 from amazon_ec import *
 from boto_PYlib import *
-from EmpiricalCovarianceLib import *
+#from EmpiricalCovarianceLib import *
 
 try:
     from variograms import *
