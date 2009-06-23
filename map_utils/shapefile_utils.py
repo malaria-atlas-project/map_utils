@@ -3,11 +3,13 @@ import numpy as np
 from mpl_toolkits import basemap
 import matplotlib.pyplot as pl
 import matplotlib
+# from matplotlib.nxutils import points_inside_poly
 from shapely import geometry, iterops, wkb, wkt
 import shapely.geometry as geom
+import pymc as pm
 from csv import reader
 
-__all__ = ['polygon_area', 'unit_to_grid', 'exclude_ues', 'plot_unit', 'obj_to_poly', 'NonSuckyShapefile']
+__all__ = ['polygon_area', 'unit_to_grid', 'exclude_ues', 'plot_unit', 'obj_to_poly', 'NonSuckyShapefile','multipoly_sample']
 
 def polygon_area(v):
     """
@@ -17,6 +19,86 @@ def polygon_area(v):
     v_first = v[:-1][:,[1,0]]
     v_second = v[1:]
     return np.diff(v_first*v_second).sum()/2.0
+    
+# def inregion(x,y,r):
+#     """
+#     ins = inregion(x,y,r)
+# 
+#     Returns an array of booleans indicating whether the x,y pairs are
+#     in region r. If region r contains multiple polygons, the ones inside 
+#     the biggest one are assumed to be holes; the ones inside holes
+#     are assumed to be islands; and so on.
+# 
+#     :Parameters:
+#       x : array
+#         x coordinates of test points
+#       y : array
+#         y coordinates of test points
+#       r : ShapeObject
+#         The region.
+#     """
+#     xy = np.vstack((x,y)).T
+# 
+#     # Record whether each point is inside each polygon.
+#     ins = []
+#     for v in r:
+#         ins.append(points_inside_poly(xy,v))
+#     ins = np.array(ins)
+# 
+#     # Return an array of booleans. An element is True if
+#     # the corresponding point is inside an odd number of polygons.
+#     return np.sum(ins, axis=0) % 2 == 1
+
+# TODO: Debug and test the sampling ones    
+# def land_sample(n):
+#     """
+#     Randomly-sampled points distributed over the earth's land.
+#     Possibly use an even grid... Remember the Jacobian when 
+#     taking integrals.
+#     """
+#     return multipoly_sample(n, land_multipoly)
+
+def multipoly_sample(n, mp):
+    """
+    Returns uniformly-distributed points on the earth's surface 
+    conditioned to be inside a multipolygon.
+    
+    Not particularly fast.
+    """
+    
+    if isinstance(mp, geometry.MultiPolygon):
+        print 'Breaking down multipolygon'
+        areas = [p.area for p in mp.geoms]
+        areas = np.array(areas)/np.sum(areas)
+        # ns = pm.rmultinomial(n, areas)
+        stair = np.array(np.concatenate(([0],np.cumsum(areas*n))),dtype='int')
+        ns = np.diff(stair)
+        locs = [multipoly_sample(ns[i], mp.geoms[i]) for i in np.where(ns>0)[0]]
+        return np.concatenate([loc[0] for loc in locs]), np.concatenate([loc[1] for loc in locs])
+        
+    
+    lons = np.empty(n)
+    lats = np.empty(n)
+    
+    done = 0
+    
+    xmin = mp.bounds[0]*np.pi/180
+    xmax = mp.bounds[1]*np.pi/180
+    ymin = mp.bounds[2]*np.pi/180
+    ymax = mp.bounds[3]*np.pi/180
+    
+    print 'Starting: n=%i'%n
+    while done < n:
+        x = np.atleast_1d(pm.runiform(xmin,xmax, size=n))
+        y = np.atleast_1d(np.arcsin(pm.runiform(np.sin(ymin),np.sin(ymax),size=n)))
+        points=[geom.Point([x[i]*180./np.pi,y[i]*180./np.pi]) for i in xrange(len(x))]
+        good = list(iterops.contains(mp, points, True))
+        n_good = min(n,len(good))
+        lons[done:done+n_good] = [p.coords[0][0] for p in good][:n-done]
+        lats[done:done+n_good] = [p.coords[0][1] for p in good][:n-done]
+        done += n_good
+    print 'Filled'
+    return lons, lats
 
 def unit_to_grid(unit, lon_min, lat_min, cellsize):
     """
@@ -127,6 +209,8 @@ class NonSuckyShapefile(object):
         self.polygons = []
         for i in xrange(self.n):
             self.polygons.append(obj_to_poly(self.sf.read_object(i)))
+            if not self.polygons[-1].is_valid:
+                self.polygons[-1] = self.polygons[-1].buffer(0)
             if not self.polygons[-1].is_valid:
                 self.polygons[-1] = obj_to_poly(self.sf.read_object(i), reverse=True)
             if not self.polygons[-1].is_valid:
