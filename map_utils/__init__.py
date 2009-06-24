@@ -34,7 +34,7 @@ def grid_convert(g, frm, to, validate=False):
       - g : 2d array
       - frm : format string
       - to : format string
-      
+
       Example format strings:
         - x+y+ (the way Anand does it) means that 
             - g[i+1,j] is west of g[i,j]
@@ -42,19 +42,25 @@ def grid_convert(g, frm, to, validate=False):
         - y-x+ (map view) means that 
             - g[i+1,j] is south of g[i,j]
             - g[i,j+1] is west of g[i,j]"""
-    
+
     # Validate format strings
     if validate:
         for st in [frm, to]:
             validate_format_str(st)
-    
+
     # Transpose if necessary
     if not frm[0]==to[0]:
         g = g.T
-        to = to[2:]+to[:2]
-        
-    if not frm[1]==to[1]:
+
+    first_dir = to[1]
+    if not first_dir == frm[frm.find(to[0])+1]:
+        # print 'First mismatch'
         g=g[::-1,:]
-    if not frm[3]==to[3]:
+
+    sec_dir = to[3]
+    if not sec_dir == frm[frm.find(to[2])+1]:
+        # print 'Second mismatch'
         g=g[:,::-1]
+
+    # print first_dir, sec_dir
     return g
