@@ -76,5 +76,24 @@ returnNewHeader<-function(bottomOBS,topOBS,leftOBS,rightOBS){
     leftOBS<-33.5
     rightOBS <-42
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS) 
+    
+   # test transect (zimbabwe through to mozambique)
+    bottomOBS<--16.86
+    topOBS <--16.404
+    leftOBS<-31.002
+    rightOBS <-35.947
+    returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)    
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
 
 
