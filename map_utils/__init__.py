@@ -7,6 +7,8 @@ from amazon_ec import *
 from boto_PYlib import *
 #from EmpiricalCovarianceLib import *
 
+from lazy_data_dir import *
+
 try:
     from variograms import *
 except:
