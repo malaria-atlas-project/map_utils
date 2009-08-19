@@ -5,8 +5,8 @@ __all__ = ['LazyDataDirectory']
 
 class LazyDataDirectory(object):
     """
-    Exposes all the hdf5 files in a directory as attributes. Only opens them
-    on-demand.
+    Exposes the roots of all the hdf5 files in a directory as attributes. 
+    Only opens them on-demand.
     """
     
     def __init__(self, path):
