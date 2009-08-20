@@ -23,6 +23,9 @@ class LazyDataDirectory(object):
                     setattr(self, name, hf)
                     return hf
             raise IOError, 'File with base %s not found in directory %s'%(name, self.path)
+    
+    def gethf(self, name):
+        return self.__getattr__(name)
             
     def close(self, name):
         if self.__dict__.has_key(name):
