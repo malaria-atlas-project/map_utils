@@ -65,6 +65,8 @@ def multipoly_sample(n, mp):
     
     Not particularly fast.
     """
+
+    # b = basemap.Basemap(-180,-90,180,90)
     
     if isinstance(mp, geometry.MultiPolygon):
         print 'Breaking down multipolygon'
@@ -83,8 +85,8 @@ def multipoly_sample(n, mp):
     done = 0
     
     xmin = mp.bounds[0]*np.pi/180
-    xmax = mp.bounds[1]*np.pi/180
-    ymin = mp.bounds[2]*np.pi/180
+    ymin = mp.bounds[1]*np.pi/180
+    xmax = mp.bounds[2]*np.pi/180
     ymax = mp.bounds[3]*np.pi/180
     
     print 'Starting: n=%i'%n
@@ -97,6 +99,13 @@ def multipoly_sample(n, mp):
         lons[done:done+n_good] = [p.coords[0][0] for p in good][:n-done]
         lats[done:done+n_good] = [p.coords[0][1] for p in good][:n-done]
         done += n_good
+        print '\tDid %i, %i remaining.'%(n_good,n-done)
+        
+        # plot_unit(b,mp)
+        # b.plot(x*180./np.pi,y*180./np.pi,'r.')
+        # 
+        # from IPython.Debugger import Pdb
+        # Pdb(color_scheme='Linux').set_trace()   
     print 'Filled'
     return lons, lats
 

@@ -5,7 +5,13 @@ from exportAscii import *
 from exportHDF5asASCII import *
 from amazon_ec import *
 from boto_PYlib import *
+from geodata_utils import *
+from hdf5_utils import *
+from zipped_cru import *
+from recarray_utils import *
 #from EmpiricalCovarianceLib import *
+
+from lazy_data_dir import *
 
 try:
     from variograms import *
