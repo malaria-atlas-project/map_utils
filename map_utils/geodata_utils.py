@@ -3,7 +3,7 @@ from numpy import ma
 from mpl_toolkits import basemap
 
 
-__all__ = ['display_surface', 'interp_geodata']
+__all__ = ['display_surface', 'interp_geodata', 'cylindrical_area_correction', 'cylindrical_pixel_area']
 
 def display_surface(long, lat, data):
     """Displays CRU data on a map."""
@@ -19,6 +19,13 @@ def display_surface(long, lat, data):
     
     return m
     
+def cylindrical_area_correction(lon, lat):
+    "For small pixels on a regular cylindrical grid, multiply the area by this."
+    return cos(lat*pi/180.)
+    
+def cylindrical_pixel_area(llclon, llclat, urclon, urclat):
+    "Returns the area of a pixel with given corners in km^2."
+    return 6378.1*(sin(urclat*pi/180.)-sin(llclat*pi/180.))*(urclon-llclon)*pi/180.
 
 def interp_geodata(long_old, lat_old, data, long_new, lat_new, mask=None):
     """
