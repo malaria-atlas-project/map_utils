@@ -48,17 +48,17 @@ returnNewHeader<-function(bottomOBS,topOBS,leftOBS,rightOBS){
  ## define observed edge locations (NA denotes same as original) and call function
 
   # AM
-    bottomOBS<- -24.397
-    topOBS <-21.756
-    leftOBS<--95.111
-    rightOBS <--38.316
+    bottomOBS<- -19.417175
+    topOBS <-20.458679
+    leftOBS<--91.466797
+    rightOBS <--42.668518
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)
 
   # AF
-    bottomOBS<--30.336
-    topOBS <-25.963
-    leftOBS<--18.395
-    rightOBS <-54.485
+    bottomOBS<--29.568787
+    topOBS <-25.176086
+    leftOBS<--18.118103
+    rightOBS <-53.439697
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)
 
   # AS
@@ -70,30 +70,47 @@ returnNewHeader<-function(bottomOBS,topOBS,leftOBS,rightOBS){
 
 
 
-   # kenya crude
-    bottomOBS<--4.9
-    topOBS <-4.8
-    leftOBS<-33.5
-    rightOBS <-42
+   # kenya 
+    bottomOBS<--4.8103
+    topOBS <-4.832
+    leftOBS<-33.9240
+    rightOBS <-41.837
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS) 
     
-   # test transect (zimbabwe through to mozambique)
-    bottomOBS<--16.86
-    topOBS <--16.404
-    leftOBS<-31.002
-    rightOBS <-35.947
+  
+    # Test square in S malawi - includes a high and low focus and an urban area
+    bottomOBS<--16.47821
+    topOBS <--15.424316
+    leftOBS<-34.451721
+    rightOBS <-35.16449
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)    
    
+    bottomOBS<--17.0687
+    topOBS <--14.8723
+    leftOBS<-33.29528
+    rightOBS <-36.50061
+    returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)       
    
    
-   
-   
-   
-   
-   
-   
-   
-   
-   
+    #AS1
+    bottomOBS<-4.428101
+    topOBS <-37.83313
+    leftOBS<-52.282104
+    rightOBS <-126.893677
+    returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)    
+
+    #AS2
+    bottomOBS<--21.044678
+    topOBS <-7.43573
+    leftOBS<-94.640686
+    rightOBS <-170.763672
+    returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)    
+
+   #AM small test square
+   bottomOBS<--12.836975
+   topOBS <--11.783081
+   leftOBS<--64.039612
+   rightOBS <--63.326904
+   returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)      
 
 

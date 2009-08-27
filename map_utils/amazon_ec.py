@@ -226,8 +226,8 @@ def map_jobs(RESERVATIONID, NINSTANCES, MAXJOBSPERINSTANCE, MAXJOBTRIES,cmds, in
     if (len(r.instances) < NINSTANCES):
         raise RuntimeError, 'Asked for '+str(NINSTANCES)+' instances but found only '+str(len(r.instances))+' on reservation '+str(RESERVATIONID)+': EXITING map_jobs_PWG!!!'
 
-    spawning_engines = [e for e in r.instances]
-    running_engines = []
+    running_engines = [e for e in r.instances]
+    #running_engines = []
     failedJobCmds = np.array([])
     failedJobCount = np.array([])
 
@@ -235,66 +235,74 @@ def map_jobs(RESERVATIONID, NINSTANCES, MAXJOBSPERINSTANCE, MAXJOBTRIES,cmds, in
     TotalCompleteOK = 0
     TotalFailures = 0
 
-    while True:
-        print '\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-        print str(len(spawning_engines))+' instances spawning;   '+str(len(running_engines))+' instances running'
-        print 'Job Status:    '+str(NjobsRunning)+' running;    '+str(TotalCompleteOK)+' completed successfully;    '+str(TotalFailures)+' failures.'
-    
-        # Watch engines to see when they come alive.
-        #print 't1'
-        for e in spawning_engines:
-            if e.update()==u'running':
-                print '\n%s is up'%e
-                #print 't2'
-                e.PendingJoblist = []
-                #print 't3'
-                spawning_engines.remove(e)
-                #print 't4'
-                running_engines.append(e)
-                #print 't5'
-                if upload_files is not None:
-                    #print 't6'
-                    print '\n\tUploading files to %s'%e
-                    #print 't7'
-                    for upload_file in upload_files:
-                        #print 't8'
-                        print '\t'+upload_file
-                        #print 't9'
-                        #p = Popen(init_scp_str +  ' %s root@%s:%s'%(upload_file, e.dns_name, upload_file.split("/")[-1]), shell=True, stdout=PIPE,stderr=STDOUT)
-                        stdout = file(str(STDOUTPATH)+'stdout_upload_'+str(e).rpartition(':')[-1]+'_'+str(upload_file).rpartition('/')[-1]+'.txt','w')
-                        #print 't10'
-                        stderr = file(str(STDOUTPATH)+'stderr_upload_'+str(e).rpartition(':')[-1]+'_'+str(upload_file).rpartition('/')[-1]+'.txt','w') 
-                        #print 't11'
-                        p = Popen(init_scp_str +  ' %s root@%s:%s'%(upload_file, e.dns_name, upload_file.split("/")[-1]), shell=True, stdout=stdout,stderr=stderr)
-                        #print 't11'
+    # Watch engines to see when they come alive.
+    #print 't1'
 
-                        retval = p.wait()
-                        #print 't12'
-                        if retval:
-                            raise ValueError, 'Upload failed! Output:\n' + p.stdout.read()
-                if init_cmds is not None:
-                    #print 't13'
-                    print '\n\tExecuting initial commands on %s'%e
-                    for init_cmd in init_cmds:
-                        #print 't14'
-                        print '\t$ %s'%init_cmd
-                        #p = Popen(init_ssh_str + ' root@%s '%e.dns_name+ init_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-                        stdout = file(str(STDOUTPATH)+'stdout_initial_'+str(e).rpartition(':')[-1]+'_'+str(init_cmd).rpartition('/')[-1].strip('"')+'.txt','w')
-                        #print 't15'
-                        stderr = file(str(STDOUTPATH)+'stderr_initial_'+str(e).rpartition(':')[-1]+'_'+str(init_cmd).rpartition('/')[-1].strip('"')+'.txt','w') 
-                        #print 't16'
-                        p = Popen(init_ssh_str + ' root@%s '%e.dns_name+ init_cmd, shell=True, stdout=stdout, stderr=stderr)
-                        #print 't17'
-                        while p.poll() is None:
-                            print '\t\tWaiting for %i...'%p.pid
-                            #print 't18'
-                            time.sleep(10)
-                            #print 't19'
-                        retval = p.poll()
-                        #print 't20'
-                        if retval:
-                            raise ValueError, 'Initial command failed! Output:\n' + p.stdout.read()
-                        print '\tSuccessful.'
+    print 'looping thorugh instances to upload files and execute initial commands:'
+    for e in running_engines:
+        
+        if e.update()!=u'running':
+            print '\ninstance %s is not running..giving it 20 seconds...'%e 
+            time.sleep(20)
+            raise ValueError, '\ninstance %s was not running!!'%e
+
+        print '\n%s is up'%e
+        #print 't2'
+        e.PendingJoblist = []
+        #print 't3'
+        #spawning_engines.remove(e)
+        #print 't4'
+        #running_engines.append(e)
+        #print 't5'
+        if upload_files is not None:
+            #print 't6'
+            print '\n\tUploading files to %s'%e
+            #print 't7'
+            for upload_file in upload_files:
+                #print 't8'
+                print '\t'+upload_file
+                #print 't9'
+                #p = Popen(init_scp_str +  ' %s root@%s:%s'%(upload_file, e.dns_name, upload_file.split("/")[-1]), shell=True, stdout=PIPE,stderr=STDOUT)
+                stdout = file(str(STDOUTPATH)+'stdout_upload_'+str(e).rpartition(':')[-1]+'_'+str(upload_file).rpartition('/')[-1]+'.txt','w')
+                #print 't10'
+                stderr = file(str(STDOUTPATH)+'stderr_upload_'+str(e).rpartition(':')[-1]+'_'+str(upload_file).rpartition('/')[-1]+'.txt','w') 
+                #print 't11'
+                p = Popen(init_scp_str +  ' %s root@%s:%s'%(upload_file, e.dns_name, upload_file.split("/")[-1]), shell=True, stdout=stdout,stderr=stderr)
+                #print 't11'
+
+                retval = p.wait()
+                #print 't12'
+                if retval:
+                    raise ValueError, 'Upload failed! Output:\n' + p.stdout.read()
+        if init_cmds is not None:
+            #print 't13'
+            print '\n\tExecuting initial commands on %s'%e
+            for init_cmd in init_cmds:
+                #print 't14'
+                print '\t$ %s'%init_cmd
+                #p = Popen(init_ssh_str + ' root@%s '%e.dns_name+ init_cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+                stdout = file(str(STDOUTPATH)+'stdout_initial_'+str(e).rpartition(':')[-1]+'_'+str(init_cmd).rpartition('/')[-1].strip('"')+'.txt','w')
+                #print 't15'
+                stderr = file(str(STDOUTPATH)+'stderr_initial_'+str(e).rpartition(':')[-1]+'_'+str(init_cmd).rpartition('/')[-1].strip('"')+'.txt','w') 
+                #print 't16'
+                p = Popen(init_ssh_str + ' root@%s '%e.dns_name+ init_cmd, shell=True, stdout=stdout, stderr=stderr)
+                #print 't17'
+                while p.poll() is None:
+                    print '\t\tWaiting for %i...'%p.pid
+                    #print 't18'
+                    time.sleep(10)
+                    #print 't19'
+                retval = p.poll()
+                #print 't20'
+                if retval:
+                    raise ValueError, 'Initial command failed! Output:\n' + p.stdout.read()
+                print '\tSuccessful.'
+
+    timestart = time.time()
+    while True:
+        print '\t\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+        #print str(len(spawning_engines))+' instances spawning;   '+str(len(running_engines))+' instances running'
+        print '\tJob Status (after '+str(time.time()-timestart)+' secs):    '+str(NjobsRunning)+' running;    '+str(TotalCompleteOK)+' completed successfully;    '+str(TotalFailures)+' failures.'
 
         # loop through running instances and deal with jobs that have finished (succesfully or otherwise)
         NjobsRunning=0
@@ -302,13 +310,14 @@ def map_jobs(RESERVATIONID, NINSTANCES, MAXJOBSPERINSTANCE, MAXJOBTRIES,cmds, in
         for e in running_engines:
         
             # In event of fault, move e back to spawning list and move this loop on to next instance
-            if e.update()!=u'running':
-                running_engines.remove(e)
-                spawning_engines.append(e)
-                continue
+            #if e.update()!=u'running':
+            #    running_engines.remove(e)
+            #    spawning_engines.append(e)
+            #    continue
 
             # how many jobs are running on this instance, what are their statuses, and where can we find them on on e.PendingJoblist?
             JobsOnInstanceDict=queryJobsOnInstance(e.PendingJoblist)
+            print '\n\t\t'+str(e)+' :currently '+str(JobsOnInstanceDict['sumRunning'])+' jobs running and '+str(JobsOnInstanceDict['sumFinished'])+' recently finished.'
 
             # if we have one or more that have newly finished on this instance:
             if(JobsOnInstanceDict['sumFinished']>0):
@@ -378,10 +387,14 @@ def map_jobs(RESERVATIONID, NINSTANCES, MAXJOBSPERINSTANCE, MAXJOBTRIES,cmds, in
                 NspareJobs = min ((MAXJOBSPERINSTANCE-NjobsRunningThisInstance),len(cmds))
                 for j in xrange(0,NspareJobs):
                     cmd=cmds.pop(0)
-                    print '\n\tSending\n\t$ %s\n\tto %s'%(cmd,e)
+                    print '\tSending\n\t$ %s\n\tto %s'%(cmd,e)
                     if STDOUTPATH is not None: send_work(e, cmd, outToFile=STDOUTPATH, outSuffix = str(time.time()))
                     else: send_work(e, cmd)
-                    NjobsRunning = NjobsRunning +1
+                    NjobsRunning +=1
+
+                    JobsOnInstanceDict=queryJobsOnInstance(e.PendingJoblist)
+                    print '\t\t'+str(e)+' :currently '+str(JobsOnInstanceDict['sumRunning'])+' jobs running and '+str(JobsOnInstanceDict['sumFinished'])+' recently finished.'
+        
                 
         # if no jobs still in queue and none still running then assume jobs are finished..
         if ((NjobsRunning == 0) & (len(cmds)==0)):
@@ -398,7 +411,7 @@ def map_jobs(RESERVATIONID, NINSTANCES, MAXJOBSPERINSTANCE, MAXJOBTRIES,cmds, in
 
 
         # now wait a specified interval before going again through a loop of the instances
-        print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'        
+        print '\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'        
         time.sleep(interval)
 
     return returns
