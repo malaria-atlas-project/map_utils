@@ -9,6 +9,8 @@ from geodata_utils import *
 from hdf5_utils import *
 from zipped_cru import *
 from recarray_utils import *
+from templateHDF5_2_PixelAreaAscii import *
+
 #from EmpiricalCovarianceLib import *
 
 from lazy_data_dir import *
