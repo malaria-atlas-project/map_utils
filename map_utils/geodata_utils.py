@@ -25,7 +25,7 @@ def cylindrical_area_correction(lon, lat):
     
 def cylindrical_pixel_area(llclon, llclat, urclon, urclat):
     "Returns the area of a pixel with given corners in km^2."
-    return 6378.1*(sin(urclat*pi/180.)-sin(llclat*pi/180.))*(urclon-llclon)*pi/180.
+    return 6378.1**2*(sin(urclat*pi/180.)-sin(llclat*pi/180.))*(urclon-llclon)*pi/180.
 
 def interp_geodata(long_old, lat_old, data, long_new, lat_new, mask=None):
     """
