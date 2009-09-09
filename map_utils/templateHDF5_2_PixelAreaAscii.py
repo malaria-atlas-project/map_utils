@@ -30,7 +30,7 @@ def makePixelAreaArray(inputHDF5template_path,outputASCII_path):
     pixel_areas_firstcolumn = cylindrical_pixel_area(llclon, llclat, urclon, urclat)
 
     # now duplicate this column of pixel areas accross the full width of the array
-    pixel_areas_firstcolumn = pixel_areas_firstcolumn[::-1]   
+    pixel_areas_firstcolumn = pixel_areas_firstcolumn[::-1]
     pixel_areas_array = np.vstack(((pixel_areas_firstcolumn,)*hdrDict['ncols'])).T
 
     # export array as ascii
