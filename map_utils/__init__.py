@@ -10,6 +10,7 @@ from hdf5_utils import *
 from zipped_cru import *
 from recarray_utils import *
 from templateHDF5_2_PixelAreaAscii import *
+from modis_utils import *
 
 #from EmpiricalCovarianceLib import *
 
@@ -24,6 +25,11 @@ try:
     from shapefile_utils import *
 except:
     print 'Failed to import shapefiles'
+    
+try:
+    from tif2array import *
+except:
+    print 'Failed to import tif2array'
 
 def validate_format_str(st):
     for i in [0,2]:

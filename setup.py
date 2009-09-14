@@ -17,7 +17,7 @@ if __name__ == '__main__':
             author="Peter Gething and Anand Patil", 
             author_email="map@map.ox.ac.uk",
             url="www.map.ox.ac.uk",
-            packages=['map_utils','map_utils/variograms'],
+            packages=['map_utils','map_utils/variograms','map_utils/modis_utils'],
             license="Public domain",
             **(config.todict()))
     for ex_fname in ['trace-to-txt']:
