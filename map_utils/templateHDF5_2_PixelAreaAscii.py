@@ -37,5 +37,5 @@ def makePixelAreaArray(inputHDF5template_path,outputASCII_path):
     exportAscii (pixel_areas_array,outputASCII_path,hdrDict)
 ########################################################################################################
 
-#makePixelAreaArray('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/gr075km_y-x+.hdf5','/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/pixarea5km_y-x+.asc')
-#makePixelAreaArray('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/gr071km_y-x+.hdf5','/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/pixarea1km_y-x+.asc')
+makePixelAreaArray('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/gr075km_y-x+.hdf5','/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/pixarea5km_y-x+.asc')
+makePixelAreaArray('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/gr071km_y-x+.hdf5','/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/pixarea1km_y-x+.asc')
