@@ -86,8 +86,11 @@ def subsetGlobalGrids (region,lims,gridname,resRatio = 1):
 #subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "salb1km-e2_y-x+",resRatio=5)
 #subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "st_mask5km-e_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "gr075km_y-x+",resRatio=1)
-subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "pixarea5km_y-x+",resRatio=1)
-subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "pixarea1km_y-x+",resRatio=5)
+#subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "pixarea5km_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "pixarea1km_y-x+",resRatio=5)
+#subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "salblim5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "salb5km-e2_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "land5km_e2_y-x+",resRatio=1)
 
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "gr071km_y-x+",resRatio=5)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "un_mask1km-e_y-x+",resRatio=5)
@@ -98,10 +101,13 @@ subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "pixarea1km_
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "salb1km-e2_y-x+",resRatio=5)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "st_mask5km-e_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "gr075km_y-x+",resRatio=1)
-subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "pixarea5km_y-x+",resRatio=1)
-subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "pixarea1km_y-x+",resRatio=5)
-#subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_st_5km-e_y-x+",resRatio=1)
-
+#subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "pixarea5km_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "pixarea1km_y-x+",resRatio=5)
+subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_st_5km-e_y-x+",resRatio=1)
+subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "salblim5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "salb5km-e2_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "land5km_e2_y-x+",resRatio=1)
 
 #subsetGlobalGrids(region="AS",lims = master_grid.AS_lims,gridname = "gr071km_y-x+",resRatio=5)
 #subsetGlobalGrids(region="AS",lims = master_grid.AS_lims,gridname = "un_mask1km-e_y-x+",resRatio=5)
@@ -131,8 +137,11 @@ subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "pixarea1km_
 #subsetGlobalGrids(region="AS1",lims = master_grid.AS1_lims,gridname = "salb1km-e2_y-x+",resRatio=5)
 #subsetGlobalGrids(region="AS1",lims = master_grid.AS1_lims,gridname = "st_mask5km-e_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AS1",lims = master_grid.AS1_lims,gridname = "gr075km_y-x+",resRatio=1)
-subsetGlobalGrids(region="AS1",lims = master_grid.AS1_lims,gridname = "pixarea5km_y-x+",resRatio=1)
-subsetGlobalGrids(region="AS1",lims = master_grid.AS1_lims,gridname = "pixarea1km_y-x+",resRatio=5)
+#subsetGlobalGrids(region="AS1",lims = master_grid.AS1_lims,gridname = "pixarea5km_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AS1",lims = master_grid.AS1_lims,gridname = "pixarea1km_y-x+",resRatio=5)
+#subsetGlobalGrids(region="AS1",lims = master_grid.AS1_lims,gridname = "salblim5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AS1",lims = master_grid.AS1_lims,gridname = "salb5km-e2_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AS1",lims = master_grid.AS1_lims,gridname = "land5km_e2_y-x+",resRatio=1)
 
 #subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "gr071km_y-x+",resRatio=5)
 #subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "un_mask1km-e_y-x+",resRatio=5)
@@ -143,8 +152,9 @@ subsetGlobalGrids(region="AS1",lims = master_grid.AS1_lims,gridname = "pixarea1k
 #subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "salb1km-e2_y-x+",resRatio=5)
 #subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "st_mask5km-e_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "gr075km_y-x+",resRatio=1)
-subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "pixarea5km_y-x+",resRatio=1)
-subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "pixarea1km_y-x+",resRatio=5)
+#subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "pixarea5km_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "pixarea1km_y-x+",resRatio=5)
+#subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "land5km_e2_y-x+",resRatio=1)
 
 #subsetGlobalGrids(region="AMS1",lims = master_grid.AMS1_lims,gridname = "gr071km_y-x+",resRatio=5)
 #subsetGlobalGrids(region="AMS1",lims = master_grid.AMS1_lims,gridname = "un_mask1km-e_y-x+",resRatio=5)
@@ -155,7 +165,8 @@ subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "pixarea1k
 #subsetGlobalGrids(region="AMS1",lims = master_grid.AMS1_lims,gridname = "salb1km-e2_y-x+",resRatio=5)
 #subsetGlobalGrids(region="AMS1",lims = master_grid.AMS1_lims,gridname = "st_mask5km-e_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AMS1",lims = master_grid.AMS1_lims,gridname = "gr075km_y-x+",resRatio=1)
-
+#subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "salblim5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "salb5km-e2_y-x+",resRatio=1)
 
 
 
