@@ -5,6 +5,7 @@ from zipped_cru import RST_extract, RDC_info
 import os
 from scipy import ndimage, mgrid
 import numpy as np
+import warnings
 
 __all__ = ['table_to_recarray', 'hdf5_to_recarray', 'recarray_to_hdf5', 'hdf5_all_data', 'asc_to_hdf5', 'CRU_to_hdf5', 'interp_hdf5', 'windowed_extraction', 'reconcile_multiple_rasters']
 
@@ -21,19 +22,18 @@ def normalize_for_mapcoords(arr, fro, to):
     arr *= (max_index - min_index)
     arr += min_index
 
-def lon_and_lat(hfroot):
-    if hasattr(hfroot,'lon'):
-        lon = hfroot.lon[:]
-    else:
-        lon = hfroot.long[:]
-        
-    return lon, hfroot.lat[:]
-
 def reconcile_multiple_rasters(hfroots):
     """
     Resamples all rasters on the coarsest mesh, restricted to the smallest window.
     Returns the shared lon and lat vectors and a list of resampled data arrays.
     """
+    
+    def lon_and_lat(hfroot):
+        if hasattr(hfroot,'lon'):
+            lon = hfroot.lon[:]
+        else:
+            lon = hfroot.long[:]
+        return lon, hfroot.lat[:]
 
     # Find the limits and coarseness.
     lon, lat = lon_and_lat(hfroots[0])
@@ -44,7 +44,7 @@ def reconcile_multiple_rasters(hfroots):
     for i in xrange(1,len(hfroots)):
         lon, lat = lon_and_lat(hfroots[i])
         lims = [max(lims[0], lon.min()), min(lims[1], lon.max()), max(lims[2], lat.min()), min(lims[3], lat.max())]
-        if lon[1]-lon[0]<dl:
+        if lon[1]-lon[0]>dl:
             coarsest = i
             dl = lon[1]-lon[0]
             
@@ -55,12 +55,24 @@ def reconcile_multiple_rasters(hfroots):
     # Resample within limits, at coarseness.
     out = []
     for hfroot in hfroots:
-        resamp_grid = np.array(mgrid[0:len(lat), 0:len(lon)],dtype=float)
+        if hasattr(hfroot.data.attrs,'view'):
+            view = hfroot.data.attrs.view
+        else:
+            warnings.warn("File %s's data does not have 'view' attr, assuming map view."%hfroot._v_file.filename)
+            view = 'y-x+'
+            
         this_lon, this_lat = lon_and_lat(hfroot)
-        normalize_for_mapcoords(resamp_grid[1], this_lon, lon)
-        normalize_for_mapcoords(resamp_grid[0], this_lat, lat)
-                
-        out.append(ndimage.map_coordinates(hfroot.data[:], resamp_grid))
+        lon_ind = np.array([np.argmin(np.abs(x-this_lon)) for x in lon])
+        lat_ind = np.array([np.argmin(np.abs(y-this_lat)) for y in lat])                    
+        if view[0]=='y':
+            inner=lat_ind
+            outer=lon_ind
+        else:
+            inner=lon_ind
+            outer=lat_ind
+        inner_dir=int(view[1]+'1')            
+        outer_dir=int(view[3]+'1')
+        out.append(np.array([hfroot.data[j][outer[::outer_dir]] for j in inner[::inner_dir]]))
         
     return lon,lat,out
 
