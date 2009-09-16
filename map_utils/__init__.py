@@ -1,6 +1,13 @@
-from checkAndBuildPaths import checkAndBuildPaths
+import warnings
+import sys
+try:
+    from templateHDF5_2_PixelAreaAscii import *
+    from checkAndBuildPaths import checkAndBuildPaths
+    from getAsciiheaderFromTemplateHDF5 import *    
+except:
+    cls, inst, tb = sys.exc_info()
+    print 'Failed to import a module. Error: ' + inst.message
 from quantile_funs import *
-from getAsciiheaderFromTemplateHDF5 import *
 from exportAscii import *
 from exportHDF5asASCII import *
 from amazon_ec import *
@@ -9,7 +16,6 @@ from geodata_utils import *
 from hdf5_utils import *
 from zipped_cru import *
 from recarray_utils import *
-from templateHDF5_2_PixelAreaAscii import *
 from modis_utils import *
 
 #from EmpiricalCovarianceLib import *

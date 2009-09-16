@@ -3,10 +3,9 @@ from numpy import *
 from geodata_utils import *
 from zipped_cru import RST_extract, RDC_info
 import os
-from scipy import ndimage, mgrid
 import numpy as np
 
-__all__ = ['table_to_recarray', 'hdf5_to_recarray', 'recarray_to_hdf5', 'hdf5_all_data', 'asc_to_hdf5', 'CRU_to_hdf5', 'interp_hdf5', 'windowed_extraction', 'reconcile_multiple_rasters']
+__all__ = ['table_to_recarray', 'hdf5_to_recarray', 'recarray_to_hdf5', 'hdf5_all_data', 'asc_to_hdf5', 'CRU_to_hdf5', 'interp_hdf5', 'windowed_extraction']
 
 def normalize_for_mapcoords(arr, fro, to):
     "Used to create inputs to ndimage.map_coordinates."
@@ -29,40 +28,45 @@ def lon_and_lat(hfroot):
         
     return lon, hfroot.lat[:]
 
-def reconcile_multiple_rasters(hfroots):
-    """
-    Resamples all rasters on the coarsest mesh, restricted to the smallest window.
-    Returns the shared lon and lat vectors and a list of resampled data arrays.
-    """
+try:
+    from scipy import ndimage, mgrid
+    def reconcile_multiple_rasters(hfroots):
+        """
+        Resamples all rasters on the coarsest mesh, restricted to the smallest window.
+        Returns the shared lon and lat vectors and a list of resampled data arrays.
+        """
 
-    # Find the limits and coarseness.
-    lon, lat = lon_and_lat(hfroots[0])
-    lims = [lon.min(), lon.max(), lat.min(), lat.max()]
-    dl = lon[1]-lon[0]
-    coarsest = 0
+        # Find the limits and coarseness.
+        lon, lat = lon_and_lat(hfroots[0])
+        lims = [lon.min(), lon.max(), lat.min(), lat.max()]
+        dl = lon[1]-lon[0]
+        coarsest = 0
 
-    for i in xrange(1,len(hfroots)):
-        lon, lat = lon_and_lat(hfroots[i])
-        lims = [max(lims[0], lon.min()), min(lims[1], lon.max()), max(lims[2], lat.min()), min(lims[3], lat.max())]
-        if lon[1]-lon[0]<dl:
-            coarsest = i
-            dl = lon[1]-lon[0]
+        for i in xrange(1,len(hfroots)):
+            lon, lat = lon_and_lat(hfroots[i])
+            lims = [max(lims[0], lon.min()), min(lims[1], lon.max()), max(lims[2], lat.min()), min(lims[3], lat.max())]
+            if lon[1]-lon[0]<dl:
+                coarsest = i
+                dl = lon[1]-lon[0]
             
-    lon, lat = lon_and_lat(hfroots[coarsest])
-    lon = lon[np.where((lon>=lims[0])*(lon<=lims[1]))]
-    lat = lat[np.where((lat>=lims[2])*(lat<=lims[3]))]
+        lon, lat = lon_and_lat(hfroots[coarsest])
+        lon = lon[np.where((lon>=lims[0])*(lon<=lims[1]))]
+        lat = lat[np.where((lat>=lims[2])*(lat<=lims[3]))]
     
-    # Resample within limits, at coarseness.
-    out = []
-    for hfroot in hfroots:
-        resamp_grid = np.array(mgrid[0:len(lat), 0:len(lon)],dtype=float)
-        this_lon, this_lat = lon_and_lat(hfroot)
-        normalize_for_mapcoords(resamp_grid[1], this_lon, lon)
-        normalize_for_mapcoords(resamp_grid[0], this_lat, lat)
+        # Resample within limits, at coarseness.
+        out = []
+        for hfroot in hfroots:
+            resamp_grid = np.array(mgrid[0:len(lat), 0:len(lon)],dtype=float)
+            this_lon, this_lat = lon_and_lat(hfroot)
+            normalize_for_mapcoords(resamp_grid[1], this_lon, lon)
+            normalize_for_mapcoords(resamp_grid[0], this_lat, lat)
                 
-        out.append(ndimage.map_coordinates(hfroot.data[:], resamp_grid))
+            out.append(ndimage.map_coordinates(hfroot.data[:], resamp_grid))
         
-    return lon,lat,out
+        return lon,lat,out
+    __all__ += ['reconcile_multiple_rasters']
+except ImportError:
+    pass
 
 # Metadata: nrows, ncols, missing, minx, maxx, miny, maxy
 def table_to_recarray(h5table):
