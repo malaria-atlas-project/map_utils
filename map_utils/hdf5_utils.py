@@ -21,65 +21,66 @@ def normalize_for_mapcoords(arr, fro, to):
     arr *= (max_index - min_index)
     arr += min_index
 
-try:
-    from scipy import ndimage, mgrid
-    def reconcile_multiple_rasters(hfroots):
-        """
-        Resamples all rasters on the coarsest mesh, restricted to the smallest window.
-        Returns the shared lon and lat vectors and a list of resampled data arrays.
-        """
-
-        def lon_and_lat(hfroot):
-            if hasattr(hfroot,'lon'):
-                lon = hfroot.lon[:]
-            else:
-                lon = hfroot.long[:]
-            return lon, hfroot.lat[:]
-
-        # Find the limits and coarseness.
-        lon, lat = lon_and_lat(hfroots[0])
-        lims = [lon.min(), lon.max(), lat.min(), lat.max()]
-        dl = lon[1]-lon[0]
-        coarsest = 0
-
-        for i in xrange(1,len(hfroots)):
-            lon, lat = lon_and_lat(hfroots[i])
-            lims = [max(lims[0], lon.min()), min(lims[1], lon.max()), max(lims[2], lat.min()), min(lims[3], lat.max())]
-            if lon[1]-lon[0]>dl:
-                coarsest = i
-                dl = lon[1]-lon[0]
-
-            
-        lon, lat = lon_and_lat(hfroots[coarsest])
-        lon = lon[np.where((lon>=lims[0])*(lon<=lims[1]))]
-        lat = lat[np.where((lat>=lims[2])*(lat<=lims[3]))]
+def reconcile_multiple_rasters(hfroots, thin=1):
+    """
+    Resamples all rasters on the coarsest mesh, restricted to the smallest window.
+    Returns the shared lon and lat vectors and a list of resampled data arrays.
     
-        # Resample within limits, at coarseness.
-        out = []
-        for hfroot in hfroots:
-            if hasattr(hfroot.data.attrs,'view'):
-                view = hfroot.data.attrs.view
-            else:
-                warnings.warn("File %s's data does not have 'view' attr, assuming map view."%hfroot._v_file.filename)
-                view = 'y-x+'
-            
-            this_lon, this_lat = lon_and_lat(hfroot)
-            lon_ind = np.array([np.argmin(np.abs(x-this_lon)) for x in lon])
-            lat_ind = np.array([np.argmin(np.abs(y-this_lat)) for y in lat])                    
-            if view[0]=='y':
-                inner=lat_ind
-                outer=lon_ind
-            else:
-                inner=lon_ind
-                outer=lat_ind
-            inner_dir=int(view[1]+'1')            
-            outer_dir=int(view[3]+'1')
-            out.append(np.array([hfroot.data[j][outer[::outer_dir]] for j in inner[::inner_dir]]))
+    All rasters are returned in x+y+ view.
+    """
+
+    def lon_and_lat(hfroot):
+        if hasattr(hfroot,'lon'):
+            lon = hfroot.lon[:]
+        else:
+            lon = hfroot.long[:]
+        return lon, hfroot.lat[:]
+
+    # Find the limits and coarseness.
+    lon, lat = lon_and_lat(hfroots[0])
+    lims = [lon.min(), lon.max(), lat.min(), lat.max()]
+    dl = lon[1]-lon[0]
+    coarsest = 0
+
+    for i in xrange(1,len(hfroots)):
+        lon, lat = lon_and_lat(hfroots[i])
+        lims = [max(lims[0], lon.min()), min(lims[1], lon.max()), max(lims[2], lat.min()), min(lims[3], lat.max())]
+        if lon[1]-lon[0]>dl:
+            coarsest = i
+            dl = lon[1]-lon[0]
+
         
-        return lon,lat,out
-    __all__ += ['reconcile_multiple_rasters']
-except ImportError:
-    pass
+    lon, lat = lon_and_lat(hfroots[coarsest])
+    lon = lon[np.where((lon>=lims[0])*(lon<=lims[1]))][::thin]
+    lat = lat[np.where((lat>=lims[2])*(lat<=lims[3]))][::thin]
+
+    # Resample within limits, at coarseness.
+    out = []
+    for hfroot in hfroots:
+        if hasattr(hfroot.data.attrs,'view'):
+            view = hfroot.data.attrs.view
+        else:
+            warnings.warn("File %s's data does not have 'view' attr, assuming map view."%hfroot._v_file.filename)
+            view = 'y-x+'
+        
+        this_lon, this_lat = lon_and_lat(hfroot)
+        lon_ind = np.array([np.argmin(np.abs(x-this_lon)) for x in lon])
+        lat_ind = np.array([np.argmin(np.abs(y-this_lat)) for y in lat])                    
+        if view[0]=='y':
+            inner=lat_ind
+            outer=lon_ind
+        else:
+            inner=lon_ind
+            outer=lat_ind
+        inner_dir=int(view[1]+'1')            
+        outer_dir=int(view[3]+'1')
+        r = np.array([hfroot.data[j][outer[::outer_dir]] for j in inner[::inner_dir]])
+        if view[0]=='y':
+            r=r.T
+        out.append(r)
+    
+    return lon,lat,out
+__all__ += ['reconcile_multiple_rasters']
 
 # Metadata: nrows, ncols, missing, minx, maxx, miny, maxy
 def table_to_recarray(h5table):

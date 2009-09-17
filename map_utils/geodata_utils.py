@@ -1,5 +1,6 @@
 from numpy import *
 from numpy import ma
+import numpy as np
 from mpl_toolkits import basemap
 import warnings
 
@@ -54,17 +55,17 @@ def grid_convert(g, frm, to, validate=False):
     return g
 
 
-def display_surface(long, lat, data):
+def display_surface(lon, lat, data):
     """Displays CRU data on a map."""
 
     m = Basemap(projection='cyl',
-            llcrnrlon = long.min(), 
+            llcrnrlon = lon.min(), 
             llcrnrlat = lat.min(),
-            urcrnrlon = long.max(),
+            urcrnrlon = lon.max(),
             urcrnrlat = lat.max(),
             resolution = 'l')
-    long, lat = meshgrid(long, lat)
-    m.contourf(long, lat, data, 30)
+    lon, lat = meshgrid(lon, lat)
+    m.contourf(lon, lat, data, 30)
     
     return m
     
@@ -76,48 +77,80 @@ def cylindrical_pixel_area(llclon, llclat, urclon, urclat):
     "Returns the area of a pixel with given corners in km^2."
     return 6378.1**2*(sin(urclat*pi/180.)-sin(llclat*pi/180.))*(urclon-llclon)*pi/180.
 
-def interp_geodata(long_old, lat_old, data, long_new, lat_new, mask=None, chunk=None):
+def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=None, view='y-x+'):
     """
     Takes gridded data, interpolates it to a non-grid point set.
     """
     
-    print 'WARNING: interp_geodata may not be working properly. It gives results\
-    that are different from those in the DB for urban and periurban.'
-    
     def chunker(v,i,chunk):
         return v[i*chunk:(i+1)*chunk]
-    
-    def where_in(v1, v2, i, chunk):
-        v1c = chunker(v1,i,chunk)
-        return where((v2>=v1c[0])*(v2<v1c[-1]))
-    
-    where_inlon = [where_in(long_old, long_new, ic, chunk[0])[0] for ic in xrange(len(long_old)/chunk[1])]
-    where_inlat = [where_in(lat_old, lat_new, jc, chunk[1])[0] for jc in xrange(len(lat_old)/chunk[0])]
+        
+    lat_argmins = np.array([np.argmin(np.abs(ln-lat_old)) for ln in lat_new])
+    lon_argmins = np.array([np.argmin(np.abs(ln-lon_old)) for ln in lon_new])
 
-    N_new = len(long_new)
+    if view[0]=='y':
+        lat_index = 0
+        lon_index = 1
+        lat_dir = int(view[1]+'1')
+        lon_dir = int(view[3]+'1')
+    else:
+        lat_index = 1
+        lon_index = 0
+        lat_dir = int(view[3]+'1')
+        lon_dir = int(view[1]+'1')
+
+    N_new = len(lon_new)
     out_vals = zeros(N_new, dtype=float)
-    
-    if mask is not None:
-        data = ma.MaskedArray(data, mask)
 
     if chunk is None:
+        dconv = grid_convert(data,view,'y+x+')        
         for i in xrange(N_new):
-            out_vals[i] = basemap.interp(data,long_old,lat_old,long_new[i],lat_new[i],order=1)
+            data = data[:]
+            if mask is not None:
+                data = ma.MaskedArray(data, mask)            
+            out_vals[i] = basemap.interp(dconv,lon_old,lat_old,lon_new[i],lat_new[i],order=0)
 
     else:
-        for ic in xrange(data.shape[0]/chunk[0]):
-            for jc in xrange(data.shape[1]/chunk[1]):
-                where_inchunk = intersect1d(where_inlat[ic],where_inlon[jc])
-                if hasattr(data.attrs,'view'):
-                    view = data.attrs.view
+        where_inlon = [np.where((lon_argmins>=ic*chunk[lon_index])*(lon_argmins<(ic+1)*chunk[lon_index]))[0] for ic in range(len(lon_old)/chunk[lon_index])]
+        where_inlat = [np.where((lat_argmins>=jc*chunk[lat_index])*(lat_argmins<(jc+1)*chunk[lat_index]))[0] for jc in range(len(lat_old)/chunk[lat_index])]
+        
+        # Always iterate forward in longitude and latitude.
+        for ic in range(data.shape[lon_index]/chunk[lon_index]):
+            for jc in range(data.shape[lat_index]/chunk[lat_index]):
+
+                # Who is in this chunk?
+                where_inchunk = intersect1d(where_inlon[ic],where_inlat[jc])
+
+                # Which slice in latitude? 
+                if lat_dir == 1:
+                    lat_slice = slice(jc*chunk[lat_index],(jc+1)*chunk[lat_index],None)
                 else:
-                    warnings.warn("Assuming map-view for %s because key 'view' not found in its data array's attrs."%data._v_file.filename)
-                    view = 'y-x+'
-                dchunk = data[ic*chunk[0]:(ic+1)*chunk[0],jc*chunk[1]:(jc+1)*chunk[1]]
-                latchunk = chunker(lat_old,jc,chunk[0])                
-                lonchunk = chunker(long_old,ic,chunk[1])
-                for index in where_inchunk:
-                    out_vals[index] = basemap.interp(grid_convert(dchunk,view,'y+x+'), lonchunk, latchunk, long_new[index], lat_new[index], order=1)
+                    lat_slice = slice(len(lat_old)-(jc+1)*chunk[lat_index],len(lat_old)-jc*chunk[lat_index],None)
+
+                # Which slice in longitude?
+                if lon_dir == 1:
+                    lon_slice = slice(ic*chunk[lon_index],(ic+1)*chunk[lon_index],None)
+                else:
+                    lon_slice = slice(len(lon_old)-(ic+1)*chunk[lon_index],len(lon_old)-ic*chunk[lon_index],None)
+
+                # Combine longitude and latitude slices in correct order
+                dslice = [None,None]
+                dslice[lat_index] = lat_slice
+                dslice[lon_index] = lon_slice
+                dslice = tuple(dslice)
+
+                dchunk = data[dslice]
+                if mask is not None:
+                    mchunk = mask[dslice]
+                    dchunk = ma.MaskedArray(dchunk, mchunk)
+
+                latchunk = chunker(lat_old,jc,chunk[lat_index])                
+                lonchunk = chunker(lon_old,ic,chunk[lon_index])
+
+                dchunk_conv = grid_convert(dchunk,view,'y+x+')
+
+                # for index in where_inchunk:
+                out_vals[where_inchunk] = basemap.interp(dchunk_conv, lonchunk, latchunk, lon_new[where_inchunk], lat_new[where_inchunk], order=0)
                     
     return out_vals
                 
