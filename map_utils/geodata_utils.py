@@ -108,7 +108,7 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
             data = data[:]
             if mask is not None:
                 data = ma.MaskedArray(data, mask)            
-            out_vals[i] = basemap.interp(dconv,lon_old,lat_old,lon_new[i],lat_new[i],order=0)
+            out_vals[i] = basemap.interp(dconv,lon_old,lat_old,lon_new[i],lat_new[i],order=1)
 
     else:
         where_inlon = [np.where((lon_argmins>=ic*chunk[lon_index])*(lon_argmins<(ic+1)*chunk[lon_index]))[0] for ic in range(len(lon_old)/chunk[lon_index])]
@@ -150,7 +150,7 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
                 dchunk_conv = grid_convert(dchunk,view,'y+x+')
 
                 # for index in where_inchunk:
-                out_vals[where_inchunk] = basemap.interp(dchunk_conv, lonchunk, latchunk, lon_new[where_inchunk], lat_new[where_inchunk], order=0)
+                out_vals[where_inchunk] = basemap.interp(dchunk_conv, lonchunk, latchunk, lon_new[where_inchunk], lat_new[where_inchunk], order=1)
                     
     return out_vals
                 
