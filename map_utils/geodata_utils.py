@@ -103,11 +103,11 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
     out_vals = zeros(N_new, dtype=float)
 
     if chunk is None:
+        data = data[:]
+        if mask is not None:
+            data = ma.MaskedArray(data, mask)
         dconv = grid_convert(data,view,'y+x+')        
         for i in xrange(N_new):
-            data = data[:]
-            if mask is not None:
-                data = ma.MaskedArray(data, mask)            
             out_vals[i] = basemap.interp(dconv,lon_old,lat_old,lon_new[i],lat_new[i],order=1)
 
     else:
@@ -120,37 +120,38 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
 
                 # Who is in this chunk?
                 where_inchunk = intersect1d(where_inlon[ic],where_inlat[jc])
+                if len(where_inchunk) > 0:
 
-                # Which slice in latitude? 
-                if lat_dir == 1:
-                    lat_slice = slice(jc*chunk[lat_index],(jc+1)*chunk[lat_index],None)
-                else:
-                    lat_slice = slice(len(lat_old)-(jc+1)*chunk[lat_index],len(lat_old)-jc*chunk[lat_index],None)
+                    # Which slice in latitude? 
+                    if lat_dir == 1:
+                        lat_slice = slice(jc*chunk[lat_index],(jc+1)*chunk[lat_index],None)
+                    else:
+                        lat_slice = slice(len(lat_old)-(jc+1)*chunk[lat_index],len(lat_old)-jc*chunk[lat_index],None)
 
-                # Which slice in longitude?
-                if lon_dir == 1:
-                    lon_slice = slice(ic*chunk[lon_index],(ic+1)*chunk[lon_index],None)
-                else:
-                    lon_slice = slice(len(lon_old)-(ic+1)*chunk[lon_index],len(lon_old)-ic*chunk[lon_index],None)
+                    # Which slice in longitude?
+                    if lon_dir == 1:
+                        lon_slice = slice(ic*chunk[lon_index],(ic+1)*chunk[lon_index],None)
+                    else:
+                        lon_slice = slice(len(lon_old)-(ic+1)*chunk[lon_index],len(lon_old)-ic*chunk[lon_index],None)
 
-                # Combine longitude and latitude slices in correct order
-                dslice = [None,None]
-                dslice[lat_index] = lat_slice
-                dslice[lon_index] = lon_slice
-                dslice = tuple(dslice)
+                    # Combine longitude and latitude slices in correct order
+                    dslice = [None,None]
+                    dslice[lat_index] = lat_slice
+                    dslice[lon_index] = lon_slice
+                    dslice = tuple(dslice)
 
-                dchunk = data[dslice]
-                if mask is not None:
-                    mchunk = mask[dslice]
-                    dchunk = ma.MaskedArray(dchunk, mchunk)
+                    dchunk = data[dslice]
+                    if mask is not None:
+                        mchunk = mask[dslice]
+                        dchunk = ma.MaskedArray(dchunk, mchunk)
 
-                latchunk = chunker(lat_old,jc,chunk[lat_index])                
-                lonchunk = chunker(lon_old,ic,chunk[lon_index])
+                    latchunk = chunker(lat_old,jc,chunk[lat_index])                
+                    lonchunk = chunker(lon_old,ic,chunk[lon_index])
 
-                dchunk_conv = grid_convert(dchunk,view,'y+x+')
+                    dchunk_conv = grid_convert(dchunk,view,'y+x+')
 
-                # for index in where_inchunk:
-                out_vals[where_inchunk] = basemap.interp(dchunk_conv, lonchunk, latchunk, lon_new[where_inchunk], lat_new[where_inchunk], order=1)
+                    # for index in where_inchunk:
+                    out_vals[where_inchunk] = basemap.interp(dchunk_conv, lonchunk, latchunk, lon_new[where_inchunk], lat_new[where_inchunk], order=1)
                     
     return out_vals
                 
