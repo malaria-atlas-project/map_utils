@@ -57,6 +57,7 @@ def reconcile_multiple_rasters(hfroots, thin=1):
     # Resample within limits, at coarseness.
     out = []
     for hfroot in hfroots:
+        print "Resampling file %s."%hfroot._v_file.filename
         if hasattr(hfroot.data.attrs,'view'):
             view = hfroot.data.attrs.view
         else:

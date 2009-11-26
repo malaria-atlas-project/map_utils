@@ -115,7 +115,7 @@ def exportAscii2(lon,lat,data,filename):
     if data.shape != (len(lat),len(lon)):
         raise ValueError, 'Data is wrong shape'
 
-    data.fill_value=-9999
+    data.fill_value=np.asscalar(np.array(-9999).astype(data.dtype))
     header = {'ncols': len(lon),
                 'nrows': len(lat),
                 'cellsize': lon[1]-lon[0],
