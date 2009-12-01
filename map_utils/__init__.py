@@ -16,11 +16,15 @@ from geodata_utils import *
 from hdf5_utils import *
 from zipped_cru import *
 from recarray_utils import *
-from modis_utils import *
 
 #from EmpiricalCovarianceLib import *
 
 from lazy_data_dir import *
+
+try:
+    from modis_utils import *
+except:
+    print 'Failed to import variograms'
 
 try:
     from variograms import *
