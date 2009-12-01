@@ -2,7 +2,7 @@ import warnings
 import sys
 try:
     from templateHDF5_2_PixelAreaAscii import *
-    from checkAndBuildPaths import checkAndBuildPaths
+    from checkAndBuildPaths import *
     from getAsciiheaderFromTemplateHDF5 import *    
 except:
     cls, inst, tb = sys.exc_info()
@@ -24,7 +24,7 @@ from lazy_data_dir import *
 try:
     from modis_utils import *
 except:
-    print 'Failed to import variograms'
+    print 'Failed to import modis_utils'
 
 try:
     from variograms import *
