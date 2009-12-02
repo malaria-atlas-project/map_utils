@@ -143,11 +143,15 @@ def asc_to_hdf5(fname, path, mapView=False,setNaN=None):
 
 #asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/land5km_e2_y-x+.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/land5km_e2_y-x+.hdf5',mapView=True)
 
-asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_st_5km-e_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_st_5km-e_y-x+_IND.hdf5',mapView=True)
-asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_5km-e_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_5km-e_y-x+_IND.hdf5',mapView=True)
-asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_st_5km-e_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_st_5km-e_y-x+_IND.hdf5',mapView=True)
-asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_5km-e_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_5km-e_y-x+_IND.hdf5',mapView=True)
+#asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_st_5km-e_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_st_5km-e_y-x+_IND.hdf5',mapView=True)
+#asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_5km-e_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_5km-e_y-x+_IND.hdf5',mapView=True)
+#asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_st_5km-e_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_st_5km-e_y-x+_IND.hdf5',mapView=True)
+#asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_5km-e_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_5km-e_y-x+_IND.hdf5',mapView=True)
 
+asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_st_5km_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_st_5km_y-x+_IND.hdf5',mapView=True)
+asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_5km_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad1_5km_y-x+_IND.hdf5',mapView=True)
+asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_st_5km_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_st_5km_y-x+_IND.hdf5',mapView=True)
+asc_to_hdf5('/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_5km_y-x+_IND.asc', path='/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/ad2_5km_y-x+_IND.hdf5',mapView=True)
 
 
 
