@@ -6,6 +6,9 @@
 import os
 
 #############################################################################################################################################
+
+__all__ = ['checkAndBuildPaths']
+
 def checkAndBuildPaths (fpath,VERBOSE=False,BUILD=False):
 
     # check file paths used as inputs to other functions.
