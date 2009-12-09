@@ -75,7 +75,17 @@ def reconcile_multiple_rasters(hfroots, thin=1):
             outer=lat_ind
         inner_dir=int(view[1]+'1')            
         outer_dir=int(view[3]+'1')
+        
+        # TODO: Use the data's chunk shape and make a bilinear interpolation in Fortran.
+        # TODO: Be sure to not interpolate the mask value; if two or more of the neighbors are
+        # TODO: masked, then mask the point, otherwise interpolate it based on its unmasked 
+        # TODO: neighbors.
         r = np.array([hfroot.data[j][outer[::outer_dir]] for j in inner[::inner_dir]])
+        
+        # TODO: Use scipy.ndimage or something
+        from IPython.Debugger import Pdb
+        Pdb(color_scheme='LightBG').set_trace()
+        
         if view[0]=='y':
             r=r.T
         out.append(r)

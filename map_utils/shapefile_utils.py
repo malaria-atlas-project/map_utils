@@ -9,16 +9,8 @@ import shapely.geometry as geom
 import pymc as pm
 from csv import reader
 
-__all__ = ['polygon_area', 'unit_to_grid', 'exclude_ues', 'plot_unit', 'obj_to_poly', 'NonSuckyShapefile','multipoly_sample']
-
-def polygon_area(v):
-    """
-    polygon_area(v)
-    Returns area of polygon
-    """
-    v_first = v[:-1][:,[1,0]]
-    v_second = v[1:]
-    return np.diff(v_first*v_second).sum()/2.0
+__all__ = ['polygon_area', 'unit_to_grid', 'exclude_ues', 'plot_unit', 'obj_to_poly', 'NonSuckyShapefile','multipoly_sample',
+            'sphere_poly_area','shapely_poly_area','shapely_multipoly_area']
     
 # def inregion(x,y,r):
 #     """
@@ -58,6 +50,53 @@ def polygon_area(v):
 #     """
 #     return multipoly_sample(n, land_multipoly)
 
+def polygon_area(v):
+    """
+    Assumes 'v' is a counterclockwise array of (x,y) coordinates, with 
+    the last equal to the first.
+    
+    Returns the area of the polygon they describe
+    """
+    x=v[:,0]
+    y=v[:,1]
+    out = -.5*np.sum(np.diff(x)*(y[:-1]+y[1:]))
+    if out < 0:
+        raise RuntimeError, 'Negative area. Are you sure your coordinates are counterclockwise?'
+    return out    
+
+def sphere_poly_area(v):
+    """
+    Assumes 'v' is a counterclockwise array of [lon,lat] tuples in radians, 
+    with the last equal to the first. Returns the area of the polygon, on the 
+    unit sphere.
+    """
+    x = v[:,0]
+    y = np.sin(v[:,1])
+    out = -.5*np.sum(np.diff(x)*(2.+y[:-1]+y[1:]))
+    if out < 0:
+        raise RuntimeError, 'Negative area. Are you sure your coordinates are counterclockwise?'
+    return out
+    
+def shapely_poly_area(p):
+    """
+    Returns the area of the given shapely polygon in square kilometers.
+    Treats the earth as a sphere.
+    """
+    exterior_coords = np.array(p.exterior.coords)*np.pi/180.
+    interior_coords = [np.array(i.coords)*np.pi/180. for i in p.interiors]
+    a = sphere_poly_area(exterior_coords[::-1]) - np.sum([sphere_poly_area(ic) for ic in interior_coords])
+    return a*6378.1**2
+    
+def shapely_multipoly_area(m):
+    """
+    Returns the area of the given shapely multipolygon in square kilometers.
+    Treats the earth as a sphere.
+    """
+    if isinstance(m, geometry.Polygon):
+        return shapely_poly_area(m)
+    else:
+        return np.sum([shapely_poly_area(p) for p in m.geoms])
+
 def multipoly_sample(n, mp):
     """
     Returns uniformly-distributed points on the earth's surface 
@@ -70,7 +109,7 @@ def multipoly_sample(n, mp):
     
     if isinstance(mp, geometry.MultiPolygon):
         print 'Breaking down multipolygon'
-        areas = [p.area for p in mp.geoms]
+        areas = [shapely_poly_area(p) for p in mp.geoms]
         areas = np.array(areas)/np.sum(areas)
         # ns = pm.rmultinomial(n, areas)
         stair = np.array(np.concatenate(([0],np.cumsum(areas*n))),dtype='int')

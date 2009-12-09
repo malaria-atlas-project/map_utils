@@ -77,7 +77,7 @@ def cylindrical_pixel_area(llclon, llclat, urclon, urclat):
     "Returns the area of a pixel with given corners in km^2."
     return 6378.1**2*(sin(urclat*pi/180.)-sin(llclat*pi/180.))*(urclon-llclon)*pi/180.
 
-def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=None, view='y-x+'):
+def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=None, view='y-x+', order=1):
     """
     Takes gridded data, interpolates it to a non-grid point set.
     """
@@ -108,7 +108,7 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
             data = ma.MaskedArray(data, mask)
         dconv = grid_convert(data,view,'y+x+')        
         for i in xrange(N_new):
-            out_vals[i] = basemap.interp(dconv,lon_old,lat_old,lon_new[i],lat_new[i],order=1)
+            out_vals[i] = basemap.interp(dconv,lon_old,lat_old,lon_new[i],lat_new[i],order=order)
 
     else:
         where_inlon = [np.where((lon_argmins>=ic*chunk[lon_index])*(lon_argmins<(ic+1)*chunk[lon_index]))[0] for ic in range(len(lon_old)/chunk[lon_index])]
@@ -151,7 +151,7 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
                     dchunk_conv = grid_convert(dchunk,view,'y+x+')
 
                     # for index in where_inchunk:
-                    out_vals[where_inchunk] = basemap.interp(dchunk_conv, lonchunk, latchunk, lon_new[where_inchunk], lat_new[where_inchunk], order=1)
+                    out_vals[where_inchunk] = basemap.interp(dchunk_conv, lonchunk, latchunk, lon_new[where_inchunk], lat_new[where_inchunk], order=order)
                     
     return out_vals
                 
