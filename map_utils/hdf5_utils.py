@@ -6,7 +6,7 @@ import os
 import numpy as np
 import warnings
 
-__all__ = ['table_to_recarray', 'hdf5_to_recarray', 'recarray_to_hdf5', 'hdf5_all_data', 'asc_to_hdf5', 'CRU_to_hdf5', 'interp_hdf5', 'windowed_extraction']
+__all__ = ['table_to_recarray', 'hdf5_to_recarray', 'recarray_to_hdf5', 'hdf5_all_data', 'asc_to_hdf5', 'CRU_to_hdf5', 'interp_hdf5', 'windowed_extraction','bilinear_resample_hdf5']
 
 def normalize_for_mapcoords(arr, fro, to):
     "Used to create inputs to ndimage.map_coordinates."
@@ -20,6 +20,79 @@ def normalize_for_mapcoords(arr, fro, to):
 
     arr *= (max_index - min_index)
     arr += min_index
+    
+def box(orig, resamp):
+    ind = np.array([np.argmin(np.abs(x-orig)) for x in resamp])
+    lobound_ind = ind.copy()
+    upbound_ind = ind.copy()+1
+
+    where_below = np.where(orig[ind]>resamp)
+    lobound_ind[where_below] = ind[where_below]-1
+    upbound_ind[where_below] = ind[where_below]
+    dx = (resamp - orig[lobound_ind])/(orig[1]-orig[0])
+    return lobound_ind, upbound_ind, dx
+
+def lon_and_lat(hfroot):
+    if hasattr(hfroot,'lon'):
+        lon = hfroot.lon[:]
+    else:
+        lon = hfroot.long[:]
+    return lon, hfroot.lat[:]
+
+
+def bilinear_resample_hdf5(hfroot, lon, lat):
+    """
+    Approximately evaluates a data layer stored in an hdf5 archive on the grid defined
+    by lon and lat.
+    
+    hfroot must have attributes data, lon and lat. hfroot.data.attrs.view should be 
+    a view string, eg 'y-x+'.
+    """
+    if hasattr(hfroot.data.attrs,'view'):
+        view = hfroot.data.attrs.view
+    else:
+        warnings.warn("File %s's data does not have 'view' attr, assuming map view."%hfroot._v_file.filename)
+        view = 'y-x+'
+            
+    this_lon, this_lat = lon_and_lat(hfroot)
+    # Get lower- and upper-bound indices, and distances from nearest points.
+    lon_li, lon_ui, lon_dx = box(this_lon, lon)
+    lat_li, lat_ui, lat_dx = box(this_lat, lat)        
+    if view[0]=='y':
+        inner_li, inner_ui, inner_dx = lat_li, lat_ui, lat_dx
+        outer_li, outer_ui, outer_dx = lon_li, lon_ui, lon_dx
+    else:
+        inner_li, inner_ui, inner_dx = lon_li, lon_ui, lon_dx
+        outer_li, outer_ui, outer_dx = lat_li, lat_ui, lat_dx
+    inner_dir=int(view[1]+'1')            
+    outer_dir=int(view[3]+'1')
+
+    # Get the weights, corner data and corner masks.
+    wts = np.empty((2,2),dtype='object')
+    r_ = np.empty((2,2), dtype='object')
+    mask_ = np.empty((2,2), dtype='object')
+    for k, inner in enumerate((inner_li, inner_ui)):
+        for l,outer in enumerate((outer_li, outer_ui)):
+            r_[k,l] = np.array([hfroot.data[j][outer[::outer_dir]] for j in inner[::inner_dir]])
+            if hasattr(hfroot,'mask'):
+                mask_[k,l] = np.array([hfroot.mask[j][outer[::outer_dir]] for j in inner[::inner_dir]])
+            else:
+                mask_[k,l] = 0.*r_[k,l]
+            wts[k,l] = np.outer(inner_dx**k*(1-inner_dx)**(1-k), outer_dx**l*(1-outer_dx)**(1-l)) * (1-mask_[k,l])
+                
+    # Bilinear interpolation
+    r = r_[0,0]*wts[0,0]+r_[0,1]*wts[0,1]+r_[1,0]*wts[1,0]+r_[1,1]*wts[1,1]
+
+    # Account for masking: don't count the masked corner pixels.
+    # If all the corner pixels are masked, mask the extracted pixel.
+    if hasattr(hfroot,'mask'):
+        normfac = wts[0,0]+wts[0,1]+wts[1,0]+wts[1,1]
+        r[np.where(normfac>0)] /= normfac[np.where(normfac>0)]
+        r = np.ma.masked_array(r, mask = normfac==0)    
+    
+    if view[0]=='y':
+        r=r.T
+    return r
 
 def reconcile_multiple_rasters(hfroots, thin=1):
     """
@@ -28,13 +101,6 @@ def reconcile_multiple_rasters(hfroots, thin=1):
     
     All rasters are returned in x+y+ view.
     """
-
-    def lon_and_lat(hfroot):
-        if hasattr(hfroot,'lon'):
-            lon = hfroot.lon[:]
-        else:
-            lon = hfroot.long[:]
-        return lon, hfroot.lat[:]
 
     # Find the limits and coarseness.
     lon, lat = lon_and_lat(hfroots[0])
@@ -49,7 +115,6 @@ def reconcile_multiple_rasters(hfroots, thin=1):
             coarsest = i
             dl = lon[1]-lon[0]
 
-        
     lon, lat = lon_and_lat(hfroots[coarsest])
     lon = lon[np.where((lon>=lims[0])*(lon<=lims[1]))][::thin]
     lat = lat[np.where((lat>=lims[2])*(lat<=lims[3]))][::thin]
@@ -58,37 +123,8 @@ def reconcile_multiple_rasters(hfroots, thin=1):
     out = []
     for hfroot in hfroots:
         print "Resampling file %s."%hfroot._v_file.filename
-        if hasattr(hfroot.data.attrs,'view'):
-            view = hfroot.data.attrs.view
-        else:
-            warnings.warn("File %s's data does not have 'view' attr, assuming map view."%hfroot._v_file.filename)
-            view = 'y-x+'
         
-        this_lon, this_lat = lon_and_lat(hfroot)
-        lon_ind = np.array([np.argmin(np.abs(x-this_lon)) for x in lon])
-        lat_ind = np.array([np.argmin(np.abs(y-this_lat)) for y in lat])                    
-        if view[0]=='y':
-            inner=lat_ind
-            outer=lon_ind
-        else:
-            inner=lon_ind
-            outer=lat_ind
-        inner_dir=int(view[1]+'1')            
-        outer_dir=int(view[3]+'1')
-        
-        # TODO: Use the data's chunk shape and make a bilinear interpolation in Fortran.
-        # TODO: Be sure to not interpolate the mask value; if two or more of the neighbors are
-        # TODO: masked, then mask the point, otherwise interpolate it based on its unmasked 
-        # TODO: neighbors.
-        r = np.array([hfroot.data[j][outer[::outer_dir]] for j in inner[::inner_dir]])
-        
-        # TODO: Use scipy.ndimage or something
-        from IPython.Debugger import Pdb
-        Pdb(color_scheme='LightBG').set_trace()
-        
-        if view[0]=='y':
-            r=r.T
-        out.append(r)
+        out.append(bilinear_resample_hdf5(hfroot, lon, lat))
     
     return lon,lat,out
 __all__ += ['reconcile_multiple_rasters']
