@@ -169,9 +169,9 @@ def subsetGlobalGrids (region,lims,gridname,resRatio = 1):
 #subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "salb5km-e2_y-x+",resRatio=1)
 
 
-subsetGlobalGrids(region="NBIA",lims = master_grid.NBIA_lims,gridname = "land5km_e2_y-x+",resRatio=1)
-subsetGlobalGrids(region="NBIA",lims = master_grid.NBIA_lims,gridname = "urb5km-e_y-x+",resRatio=1)
-subsetGlobalGrids(region="AFGH",lims = master_grid.AFGH_lims,gridname = "land5km_e2_y-x+",resRatio=1)
-subsetGlobalGrids(region="AFGH",lims = master_grid.AFGH_lims,gridname = "urb5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="NBIA",lims = master_grid.NBIA_lims,gridname = "land5km_e2_y-x+",resRatio=1)
+#subsetGlobalGrids(region="NBIA",lims = master_grid.NBIA_lims,gridname = "urb5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid.AFGH_lims,gridname = "land5km_e2_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid.AFGH_lims,gridname = "urb5km-e_y-x+",resRatio=1)
 
 
