@@ -15,6 +15,7 @@ from boto_PYlib import *
 from geodata_utils import *
 from hdf5_utils import *
 from zipped_cru import *
+
 from recarray_utils import *
 
 #from EmpiricalCovarianceLib import *
@@ -36,10 +37,9 @@ try:
 except:
     print 'Failed to import variograms'
 
-try:
-    from shapefile_utils import *
-except:
-    print 'Failed to import shapefiles'
+
+from shapefile_utils import *
+
     
 try:
     from tif2array import *

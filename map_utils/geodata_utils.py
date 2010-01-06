@@ -1,7 +1,6 @@
 from numpy import *
 from numpy import ma
 import numpy as np
-from mpl_toolkits import basemap
 import warnings
 
 __all__ = ['display_surface', 'interp_geodata', 'cylindrical_area_correction', 'cylindrical_pixel_area', 'validate_format_str', 'grid_convert']
@@ -57,7 +56,7 @@ def grid_convert(g, frm, to, validate=False):
 
 def display_surface(lon, lat, data):
     """Displays CRU data on a map."""
-
+    from mpl_toolkits import basemap
     m = Basemap(projection='cyl',
             llcrnrlon = lon.min(), 
             llcrnrlat = lat.min(),
@@ -81,7 +80,7 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
     """
     Takes gridded data, interpolates it to a non-grid point set.
     """
-    
+    from mpl_toolkits import basemap
     def chunker(v,i,chunk):
         return v[i*chunk:(i+1)*chunk]
         

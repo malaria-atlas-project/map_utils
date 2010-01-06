@@ -103,8 +103,8 @@ def subsetGlobalGrids (region,lims,gridname,resRatio = 1):
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "gr075km_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "pixarea5km_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "pixarea1km_y-x+",resRatio=5)
-subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_st_5km-e_y-x+",resRatio=1)
-subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_st_5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_5km-e_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "salblim5km-e_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "salb5km-e2_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "land5km_e2_y-x+",resRatio=1)
@@ -169,7 +169,9 @@ subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_5km-e_y
 #subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "salb5km-e2_y-x+",resRatio=1)
 
 
-
-
+subsetGlobalGrids(region="NBIA",lims = master_grid.NBIA_lims,gridname = "land5km_e2_y-x+",resRatio=1)
+subsetGlobalGrids(region="NBIA",lims = master_grid.NBIA_lims,gridname = "urb5km-e_y-x+",resRatio=1)
+subsetGlobalGrids(region="AFGH",lims = master_grid.AFGH_lims,gridname = "land5km_e2_y-x+",resRatio=1)
+subsetGlobalGrids(region="AFGH",lims = master_grid.AFGH_lims,gridname = "urb5km-e_y-x+",resRatio=1)
 
 

@@ -68,15 +68,26 @@ returnNewHeader<-function(bottomOBS,topOBS,leftOBS,rightOBS){
     rightOBS <-170.936
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)
 
-
-
-   # kenya 
+  # kenya 
     bottomOBS<--4.8103
     topOBS <-4.832
     leftOBS<-33.9240
     rightOBS <-41.837
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS) 
     
+  # Namibia
+    bottomOBS<--29.13
+    topOBS <--16.85
+    leftOBS<-11.18
+    rightOBS <-25.24
+    returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS) 
+    
+   # Afghanistan
+    bottomOBS<-29.19
+    topOBS <-38.69
+    leftOBS<-60.26
+    rightOBS <-75.13
+    returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)    
   
     # Test square in S malawi - includes a high and low focus and an urban area
     bottomOBS<--16.47821
