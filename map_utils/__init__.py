@@ -15,6 +15,7 @@ from boto_PYlib import *
 from geodata_utils import *
 from hdf5_utils import *
 from zipped_cru import *
+from merge_close_points import *
 
 from recarray_utils import *
 
