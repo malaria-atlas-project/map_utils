@@ -161,13 +161,24 @@ def BuildAsciiParamsInHDF5(hdfFilePath,CELLTOLLERANCE = 1e-6,missingDefault=-999
 ###############################################################################################################
 
 #BuildAsciiParamsInHDF5("/home/pwg/mbg-world/datafiles/auxiliary_data/ndvi.mean.geographic.world.2001-to-2006.hdf5",CELLTOLLERANCE = 1e-6,missingDefault=-9999,overwrite=False)
-
 #BuildAsciiParamsInHDF5("/home/pwg/mbg-world/datafiles/auxiliary_data/ndvi.annual-amplitude.geographic.world.2001-to-2006.hdf5",CELLTOLLERANCE = 1e-6,missingDefault=-9999,overwrite=False)
-
 #BuildAsciiParamsInHDF5("/home/pwg/mbg-world/datafiles/auxiliary_data/evi.mean.geographic.world.2001-to-2005.hdf5",CELLTOLLERANCE = 1e-6,missingDefault=-9999,overwrite=False)
-
 #BuildAsciiParamsInHDF5("/home/pwg/mbg-world/datafiles/auxiliary_data/evi.minimum.geographic.world.2001-to-2006.hdf5",CELLTOLLERANCE = 1e-6,missingDefault=-9999,overwrite=False)
-
 #BuildAsciiParamsInHDF5("/home/pwg/mbg-world/datafiles/auxiliary_data/raw-data.elevation.geographic.world.version-5.hdf5",CELLTOLLERANCE = 1e-6,missingDefault=-9999,overwrite=False)
-    
+
+#BuildAsciiParamsInHDF5("/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.annual-amplitude.geographic.world.2001-to-2006.hdf5",CELLTOLLERANCE = 1e-6,missingDefault=-9999,overwrite=False)
+#BuildAsciiParamsInHDF5("/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.mean.geographic.world.2001-to-2006.hdf5",CELLTOLLERANCE = 1e-6,missingDefault=-9999,overwrite=False)
+#BuildAsciiParamsInHDF5("/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.minimum.geographic.world.2001-to-2006.hdf5",CELLTOLLERANCE = 1e-6,missingDefault=-9999,overwrite=False)
+#BuildAsciiParamsInHDF5("/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.maximum.geographic.world.2001-to-2006.hdf5",CELLTOLLERANCE = 1e-6,missingDefault=-9999,overwrite=False)
+#BuildAsciiParamsInHDF5("/home/pwg/mbg-world/datafiles/auxiliary_data/evi.annual-amplitude.geographic.world.2001-to-2006.hdf5",CELLTOLLERANCE = 1e-6,missingDefault=-9999,overwrite=False)
+
+
+
+
+
+
+
+
+
+   
     

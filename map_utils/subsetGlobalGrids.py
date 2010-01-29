@@ -196,8 +196,20 @@ def subsetGlobalGrids (region,lims,gridname,resRatio = 1):
 
 from mbgw import master_grid_MODIS
 datafolder = "/home/pwg/mbg-world/datafiles/auxiliary_data/"
-subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "ndvi.mean.geographic.world.2001-to-2006",resRatio=1)
-subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "ndvi.annual-amplitude.geographic.world.2001-to-2006",resRatio=1)
-subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "evi.mean.geographic.world.2001-to-2005",resRatio=1)
-subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "evi.minimum.geographic.world.2001-to-2006",resRatio=1)
-subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "raw-data.elevation.geographic.world.version-5",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "ndvi.mean.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "ndvi.annual-amplitude.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "evi.mean.geographic.world.2001-to-2005",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "evi.minimum.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "raw-data.elevation.geographic.world.version-5",resRatio=1)
+
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "daytime-land-temp.annual-amplitude.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "daytime-land-temp.mean.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "daytime-land-temp.minimum.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "daytime-land-temp.maximum.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "evi.annual-amplitude.geographic.world.2001-to-2006",resRatio=1)
+
+
+
+
+
+

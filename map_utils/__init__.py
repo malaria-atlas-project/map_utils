@@ -38,8 +38,11 @@ try:
 except:
     print 'Failed to import variograms'
 
+try:
+    from shapefile_utils import *
+except:
+    print 'Failed to import shapefile_utils'
 
-from shapefile_utils import *
 
     
 try:

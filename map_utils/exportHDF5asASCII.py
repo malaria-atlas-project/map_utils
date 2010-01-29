@@ -11,7 +11,7 @@ def exportHDF5asASCII (hdfFilePath,outputpath):
     inputarray = hf.root.data[:]   
 
     # get header info as dictionary
-    hdrDict = getAsciiheaderFromTemplateHDF5.getAsciiheaderFromTemplateHDF5 (hdfFilePath)
+    hdrDict = getAsciiheaderFromTemplateHDF5 (hdfFilePath)
 
     # export as ascii
     exportAscii(inputarray,outputpath,hdrDict)
@@ -30,3 +30,8 @@ def exportHDF5asASCII (hdfFilePath,outputpath):
 
 
 
+#exportHDF5asASCII ("/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.annual-amplitude.geographic.world.2001-to-2006_AFGH.hdf5","/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.annual-amplitude.geographic.world.2001-to-2006_AFGH.asc")
+#exportHDF5asASCII ("/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.mean.geographic.world.2001-to-2006_AFGH.hdf5","/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.mean.geographic.world.2001-to-2006_AFGH.asc")
+#exportHDF5asASCII ("/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.minimum.geographic.world.2001-to-2006_AFGH.hdf5","/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.minimum.geographic.world.2001-to-2006_AFGH.asc")
+#exportHDF5asASCII ("/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.maximum.geographic.world.2001-to-2006_AFGH.hdf5","/home/pwg/mbg-world/datafiles/auxiliary_data/daytime-land-temp.maximum.geographic.world.2001-to-2006_AFGH.asc")
+#exportHDF5asASCII ("/home/pwg/mbg-world/datafiles/auxiliary_data/evi.annual-amplitude.geographic.world.2001-to-2006_AFGH.hdf5","/home/pwg/mbg-world/datafiles/auxiliary_data/evi.annual-amplitude.geographic.world.2001-to-2006_AFGH.asc")
