@@ -45,3 +45,5 @@ try:
     from tif2array import *
 except:
     print 'Failed to import tif2array'
+
+from top_raster import *
