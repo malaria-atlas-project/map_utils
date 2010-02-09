@@ -15,6 +15,8 @@ from boto_PYlib import *
 from geodata_utils import *
 from hdf5_utils import *
 from zipped_cru import *
+from merge_close_points import *
+
 from recarray_utils import *
 
 #from EmpiricalCovarianceLib import *
@@ -39,7 +41,9 @@ except:
 try:
     from shapefile_utils import *
 except:
-    print 'Failed to import shapefiles'
+    print 'Failed to import shapefile_utils'
+
+
     
 try:
     from tif2array import *

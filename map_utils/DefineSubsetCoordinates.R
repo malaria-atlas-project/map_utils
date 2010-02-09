@@ -38,12 +38,20 @@ returnNewHeader<-function(bottomOBS,topOBS,leftOBS,rightOBS){
 }
 #######################################################################
 
+# ## define original header
+#    ncols<-         8664
+#    nrows<-         3384
+#    xllcorner<-     -180
+#    yllcorner<-     -57
+#    cellsize<-      0.04166665
+
  ## define original header
-    ncols<-         8664
-    nrows<-         3384
+    ncols<-         43200
+    nrows<-         21600
     xllcorner<-     -180
-    yllcorner<-     -57
-    cellsize<-      0.04166665
+    yllcorner<-     -90
+    cellsize<-      0.008333
+
 
  ## define observed edge locations (NA denotes same as original) and call function
 
@@ -68,17 +76,28 @@ returnNewHeader<-function(bottomOBS,topOBS,leftOBS,rightOBS){
     rightOBS <-170.936
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)
 
-
-
-   # kenya 
+  # Kenya 
     bottomOBS<--4.8103
     topOBS <-4.832
     leftOBS<-33.9240
     rightOBS <-41.837
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS) 
     
+  # Namibia
+    bottomOBS<--29.13
+    topOBS <--16.85
+    leftOBS<-11.18
+    rightOBS <-25.24
+    returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS) 
+    
+   # Afghanistan
+    bottomOBS<-29.19
+    topOBS <-38.69
+    leftOBS<-60.26
+    rightOBS <-75.13
+    returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)    
   
-    # Test square in S malawi - includes a high and low focus and an urban area
+    # Test square in S Malawi - includes a high and low focus and an urban area
     bottomOBS<--16.47821
     topOBS <--15.424316
     leftOBS<-34.451721
@@ -90,7 +109,6 @@ returnNewHeader<-function(bottomOBS,topOBS,leftOBS,rightOBS){
     leftOBS<-33.29528
     rightOBS <-36.50061
     returnNewHeader(bottomOBS,topOBS,leftOBS,rightOBS)       
-   
    
     #AS1
     bottomOBS<-4.428101

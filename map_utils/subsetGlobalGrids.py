@@ -1,12 +1,12 @@
 # import libraries
-from mbgw import master_grid
+#from mbgw import master_grid_MODIS
 import tables as tb
 from numpy import *
 
 # set some parameters
 #resRatio=5  # ratio between resolution of grids defines in master_grid, and the ones being subsetted here
-datafolder = "/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/"
-
+#datafolder = "/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/"
+datafolder = "/home/pwg/mbg-world/datafiles/auxiliary_data/"
 
 
 ################################################################################################################################################
@@ -22,15 +22,31 @@ def subsetGlobalGrids (region,lims,gridname,resRatio = 1):
     # open link to full sized 1km file
     fullHDF5 = tb.openFile(input_path, mode = "r")    
 
+    # check in y-x+ format, or else not configured
+    if fullHDF5.root._v_attrs.order != 'y-x+':
+        raise ValueError ('hdf5 file: '+str(input_path)+'\nis not in y-x+ view, and function not configured to handle any other')    
+
     # get 1km row/cols for this subset from the pre-defined object in mbgw 'master_grid' (NB - the values therein were entered manually after running the R script DefineSubsetCoordinates.R)
     br=(lims['bottomRow'])*resRatio
     tr=(lims['topRow']-1)*resRatio
     lc=(lims['leftCol']-1)*resRatio
     rc=(lims['rightCol'])*resRatio
 
+    # define full length vector of lat and automatically sort to descending
+    lat = fullHDF5.root.lat[:]
+    lat.sort()
+    lat=lat[::-1]
+
+     # define full length vector of lon and automatically sort to ascending
+    try:
+        long = fullHDF5.root.long[:]
+    except:
+        long = fullHDF5.root.lon[:]
+    long.sort()
+
     # define subsetted lat and long vector
-    long = fullHDF5.root.long[lc:rc:1]
-    lat = fullHDF5.root.lat[tr:br:1]
+    long = long[lc:rc:1]
+    lat = lat[tr:br:1]
 
     nrows = len(lat)
     ncols = len(long)
@@ -76,7 +92,10 @@ def subsetGlobalGrids (region,lims,gridname,resRatio = 1):
     fullHDF5.close()
     outHDF5.close()
 ################################################################################################################################################
-#
+#from mbgw import master_grid
+#datafolder = "/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/"
+
+
 #subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "gr071km_y-x+",resRatio=5)
 #subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "un_mask1km-e_y-x+",resRatio=5)
 #subsetGlobalGrids(region="AM",lims = master_grid.AM_lims,gridname = "salblim1km-e_y-x+",resRatio=5)
@@ -103,8 +122,8 @@ def subsetGlobalGrids (region,lims,gridname,resRatio = 1):
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "gr075km_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "pixarea5km_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "pixarea1km_y-x+",resRatio=5)
-subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_st_5km-e_y-x+",resRatio=1)
-subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_st_5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_5km-e_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "salblim5km-e_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "salb5km-e2_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "land5km_e2_y-x+",resRatio=1)
@@ -167,6 +186,27 @@ subsetGlobalGrids(region="AF",lims = master_grid.AF_lims,gridname = "ad1_5km-e_y
 #subsetGlobalGrids(region="AMS1",lims = master_grid.AMS1_lims,gridname = "gr075km_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "salblim5km-e_y-x+",resRatio=1)
 #subsetGlobalGrids(region="AS2",lims = master_grid.AS2_lims,gridname = "salb5km-e2_y-x+",resRatio=1)
+
+
+#subsetGlobalGrids(region="NBIA",lims = master_grid.NBIA_lims,gridname = "land5km_e2_y-x+",resRatio=1)
+#subsetGlobalGrids(region="NBIA",lims = master_grid.NBIA_lims,gridname = "urb5km-e_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid.AFGH_lims,gridname = "land5km_e2_y-x+",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid.AFGH_lims,gridname = "urb5km-e_y-x+",resRatio=1)
+
+
+from mbgw import master_grid_MODIS
+datafolder = "/home/pwg/mbg-world/datafiles/auxiliary_data/"
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "ndvi.mean.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "ndvi.annual-amplitude.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "evi.mean.geographic.world.2001-to-2005",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "evi.minimum.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "raw-data.elevation.geographic.world.version-5",resRatio=1)
+
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "daytime-land-temp.annual-amplitude.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "daytime-land-temp.mean.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "daytime-land-temp.minimum.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "daytime-land-temp.maximum.geographic.world.2001-to-2006",resRatio=1)
+#subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "evi.annual-amplitude.geographic.world.2001-to-2006",resRatio=1)
 
 
 

@@ -1,6 +1,5 @@
 from zipfile import *
 from numpy import *
-from mpl_toolkits import basemap
 from csv import reader
 
 __all__ = ['str_to_val', 'RDC_info', 'RST_extract', 'CRU_extract', 'interp_CRU']
@@ -89,6 +88,7 @@ def interp_CRU(path, fname, long_new, lat_new, zip=True, dtype=None):
     """
     Extracts from a CRU file, interpolates it to a non-grid point set.
     """
+    from mpl_toolkits import basemap
     long_old, lat_old, data = CRU_extract(path, fname, zip, dtype)
     N_new = len(long_new)
     out_vals = zeros(N_new, dtype=float)

@@ -1,7 +1,6 @@
 from __future__ import division
 import numpy as np
-from mpl_toolkits import basemap
-import matplotlib.pyplot as pl
+import pylab as pl
 import matplotlib
 # from matplotlib.nxutils import points_inside_poly
 from shapely import geometry, iterops, wkb, wkt
@@ -247,7 +246,7 @@ class NonSuckyShapefile(object):
     Also has method plotall(b, *args, **kwargs).
     """
     def __init__(self, fname):
-        
+        from mpl_toolkits import basemap
         self.fname = fname
         self.sf = basemap.ShapeFile(fname)
         self.llc = self.sf.info()[2]
