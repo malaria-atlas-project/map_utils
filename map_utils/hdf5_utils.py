@@ -296,12 +296,13 @@ def add_mask(path, fname, missing_codes):
         raise KeyboardInterrupt, 'Interrupted at row %i of %i'%(i, data.shape[0])
         
     
-def interp_hdf5(path, fname, long_new, lat_new, with_mask=True):
+def interp_hdf5(path, fname, long_new, lat_new, with_mask=True, order=1):
     """
     Interpolates layer in hdf5 archive to a non-grid point set.
     """
     h5file = openFile(path+fname+'.hdf5', mode='r')
     lat_old, data = h5file.root.lat[:], h5file.root.data
+    view = getattr(h5file.root.data.attrs, 'view', None)
     
     if hasattr(h5file.root,'long'):
         long_old = h5file.root.long[:]
@@ -313,7 +314,7 @@ def interp_hdf5(path, fname, long_new, lat_new, with_mask=True):
         if hasattr(h5file.root, 'mask'):
             mask = h5file.root.mask
         
-    return interp_geodata(long_old, lat_old, data, long_new, lat_new, mask)
+    return interp_geodata(long_old, lat_old, data, long_new, lat_new, mask, order=order, view=view)
 
 
 

@@ -77,7 +77,7 @@ def cylindrical_pixel_area(llclon, llclat, urclon, urclat):
     "Returns the area of a pixel with given corners in km^2."
     return 6378.1**2*(sin(urclat*pi/180.)-sin(llclat*pi/180.))*(urclon-llclon)*pi/180.
 
-def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=None, view='y-x+', order=1):
+def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=None, view='y-x+', order=1, nan_handler=None):
     """
     Takes gridded data, interpolates it to a non-grid point set.
     """
@@ -109,7 +109,12 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
         dconv = grid_convert(data,view,'y+x+')        
         for i in xrange(N_new):
             out_vals[i] = basemap.interp(dconv,lon_old,lat_old,lon_new[i],lat_new[i],order=order)
-
+    
+        if nan_handler is not None:
+            where_nan = np.where(np.isnan(out_vals))
+            out_vals[where_nan] = nan_handler(lon_old, lat_old, dconv, lon_new[where_nan], lat_new[where_nan], order)
+    
+        
     else:
         where_inlon = [np.where((lon_argmins>=ic*chunk[lon_index])*(lon_argmins<(ic+1)*chunk[lon_index]))[0] for ic in range(len(lon_old)/chunk[lon_index])]
         where_inlat = [np.where((lat_argmins>=jc*chunk[lat_index])*(lat_argmins<(jc+1)*chunk[lat_index]))[0] for jc in range(len(lat_old)/chunk[lat_index])]
@@ -152,6 +157,12 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
 
                     # for index in where_inchunk:
                     out_vals[where_inchunk] = basemap.interp(dchunk_conv, lonchunk, latchunk, lon_new[where_inchunk], lat_new[where_inchunk], order=order)
+                    
+                    if nan_handler is not None:
+                        where_nan = np.where(np.isnan(out_vals[where_inchunk]))
+                        out_vals[where_inchunk][where_nan] = nan_handler(lonchunk, latchunk, dchunk_conv, lon_new[where_inchunk][where_nan], lat_new[where_inchunk][where_nan], order)
+                    
+    
                     
     return out_vals
                 
