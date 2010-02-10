@@ -19,15 +19,16 @@ def import_raster(name,path,type=None):
         lon = hf.root.lon[:]
         lat = hf.root.lat[:]
         data = grid_convert(np.ma.masked_array(hf.root.data[:], mask=hf.root.mask[:]), hf.root.data.attrs.view, 'y-x+')
-    return lon,lat,data,type
+        hf.close()
+    return np.sort(lon),np.sort(lat),data,type
     
 def export_raster(lon,lat,data,name,path,type,view='y-x+'):
-    lon = lon.sort()
-    lat = lat.sort()
+    lon = np.sort(lon)
+    lat = np.sort(lat)
     if type=='asc':
         exportAscii2(lon,lat,data,os.path.join(path,name+'.asc'))
     elif type=='hdf5':
-        hf = tb.openFile(os.path.join(path,name+'.hdf5'))
+        hf = tb.openFile(os.path.join(path,name+'.hdf5'),'w')
         hf.createArray('/','lon',lon)
         hf.createArray('/','lat',lat)
         hf.createCArray('/','data',shape=data.shape,atom=tb.FloatAtom(),filters=tb.Filters(complib='zlib',complevel=1))
