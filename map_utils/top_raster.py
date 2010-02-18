@@ -6,7 +6,7 @@ from map_utils import *
 __all__ = ['import_raster', 'export_raster']
 
 def import_raster(name,path,type=None):
-    known_types = ['asc','hdf5','flt']
+    known_types = ['asc','hdf5','flt','RDC.zip','rdc']
     if type is None:
         for type in known_types:
             if name+'.'+type in os.listdir(path):
@@ -22,6 +22,10 @@ def import_raster(name,path,type=None):
         hf.close()
     elif type=='flt':
         lon,lat,data = flt_to_ndarray(name, path=path)
+    elif type=='rdc':
+        lon,lat,data = CRU_extract(path, name, zip=False)
+    elif type=='RDC.zip':
+        lon,lat,data = CRU_extract(path, name, zip=True)
     return np.sort(lon),np.sort(lat),data,type
     
 def export_raster(lon,lat,data,name,path,type,view='y-x+'):
@@ -42,4 +46,4 @@ def export_raster(lon,lat,data,name,path,type,view='y-x+'):
     elif type=='flt':
         export_flt(lon,lat,data,os.path.join(path,name))
     else:
-        raise NotImplementedError, 'Raster type %s unknown'%type
+        raise NotImplementedError, 'Do not know how to export raster type %s'%type

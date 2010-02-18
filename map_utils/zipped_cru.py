@@ -53,7 +53,7 @@ def RDC_info(path,fname, zip=True):
 def RST_extract(path, fname, zip=True, dtype=None):
     """Converts RST file to ndarray and returns it."""
     if zip:
-        Z = ZipFile(path+'/'+fname+'.rst.zip')
+        Z = ZipFile(path+'/'+fname+'.RDC.zip')
         data = Z.read(fname+'.rst')
         if dtype is None:
             return fromstring(data, dtype=float16)
@@ -66,9 +66,7 @@ def RST_extract(path, fname, zip=True, dtype=None):
         else:
             out= fromfile(data, dtype=dtype)
         data.close()
-        return out
-
-    
+        return out    
 
 def CRU_extract(path, fname, zip=True, dtype=None):
     """Converts RST and RDC file pair to long, lat, data tuple."""
@@ -80,7 +78,7 @@ def CRU_extract(path, fname, zip=True, dtype=None):
 
     print data.shape, long.shape, lat.shape, info['rows'], info['columns']
     
-    data = reshape(data, (info['rows'], info['columns']))[::-1,:]
+    data = reshape(data, (info['rows'], info['columns']))
 
     return long, lat, data
 
