@@ -1,10 +1,10 @@
-import ImageFile
 import numpy as np
 
 __all__ = ['tif2array']
 
 def tif2array(fname):
     """Convert image to Numeric array"""
+    import ImageFile
     im = ImageFile.Image.open(fname)
     print im.size
     print im.mode

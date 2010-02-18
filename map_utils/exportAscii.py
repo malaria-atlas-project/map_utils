@@ -2,7 +2,6 @@ import numpy as np
 import string
 from geodata_utils import grid_convert
 import os
-from scipy import io
 
 __all__ = ['asc_to_ndarray','exportAscii', 'get_header', 'reexport_ascii','exportAscii2', 'flt_to_ndarray', 'export_flt']
 
@@ -92,6 +91,8 @@ def reexport_ascii(fname, path='./'):
 
 def flt_to_ndarray(fname, path='./'):
     "fname should have no extension; the '.hdr' and '.flt' extensions will be added automatically."
+    from scipy import io
+
     header, headlines = get_header(fname+'.hdr', path)
     
     ncols = header['ncols']
@@ -118,6 +119,8 @@ def flt_to_ndarray(fname, path='./'):
     
 def export_flt(lon,lat,data,filename,view='y-x+'):
     "filename should have no extension; the '.hdr' and '.flt' extensions will be added automatically." 
+    from scipy import io
+
     data = grid_convert(data, view, 'y-x+')
     if data.shape != (len(lat),len(lon)):
         raise ValueError, 'Data is wrong shape'

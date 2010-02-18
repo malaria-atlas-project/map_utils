@@ -1,27 +1,33 @@
 import warnings
 import sys
+
 try:
     from templateHDF5_2_PixelAreaAscii import *
     from getAsciiheaderFromTemplateHDF5 import *    
 except:
     cls, inst, tb = sys.exc_info()
-    print 'Failed to import a module. Error: ' + inst.message
+    print 'Failed to import a module. Error: ' + inst[0]
 
 from quantile_funs import *
 from exportAscii import *
 from exportHDF5asASCII import *
-from amazon_ec import *
-from boto_PYlib import *
 from geodata_utils import *
 from hdf5_utils import *
 from zipped_cru import *
 from merge_close_points import *
+from tif2array import *
 
 from recarray_utils import *
 
 #from EmpiricalCovarianceLib import *
 
 from lazy_data_dir import *
+
+try:
+    from amazon_ec import *
+    from boto_PYlib import *
+except:
+    print 'Failed to improt amazon_ec and boto_PYlib'
 
 try:
     from checkAndBuildPaths import *
@@ -42,12 +48,5 @@ try:
     from shapefile_utils import *
 except:
     print 'Failed to import shapefile_utils'
-
-
-    
-try:
-    from tif2array import *
-except:
-    print 'Failed to import tif2array'
 
 from top_raster import *
