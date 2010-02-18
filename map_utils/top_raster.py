@@ -1,12 +1,12 @@
 import os
 import tables as tb
 import numpy as np
-from map_utils import asc_to_ndarray, grid_convert, exportAscii2
+from map_utils import *
 
 __all__ = ['import_raster', 'export_raster']
 
 def import_raster(name,path,type=None):
-    known_types = ['asc','hdf5']
+    known_types = ['asc','hdf5','flt']
     if type is None:
         for type in known_types:
             if name+'.'+type in os.listdir(path):
@@ -20,6 +20,8 @@ def import_raster(name,path,type=None):
         lat = hf.root.lat[:]
         data = grid_convert(np.ma.masked_array(hf.root.data[:], mask=hf.root.mask[:]), hf.root.data.attrs.view, 'y-x+')
         hf.close()
+    elif type=='flt':
+        lon,lat,data = flt_to_ndarray(name, path=path)
     return np.sort(lon),np.sort(lat),data,type
     
 def export_raster(lon,lat,data,name,path,type,view='y-x+'):
@@ -37,5 +39,7 @@ def export_raster(lon,lat,data,name,path,type,view='y-x+'):
         hf.root.mask[:]=data.mask
         hf.root.data.attrs.view=view
         hf.close()
+    elif type=='flt':
+        export_flt(lon,lat,data,os.path.join(path,name))
     else:
         raise NotImplementedError, 'Raster type %s unknown'%type
