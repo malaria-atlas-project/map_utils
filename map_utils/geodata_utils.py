@@ -159,10 +159,8 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
                     
                     if nan_handler is not None:
                         where_nan = np.where(np.isnan(out_vals[where_inchunk]))
-                        out_vals[where_inchunk][where_nan] = nan_handler(lonchunk, latchunk, dchunk_conv, lon_new[where_inchunk][where_nan], lat_new[where_inchunk][where_nan], order)
-                    
-    
-                    
+                        out_vals[where_inchunk][where_nan] = nan_handler(lonchunk, latchunk, dchunk_conv, lon_new[where_inchunk][where_nan], lat_new[where_inchunk][where_nan], order)                
+
     return out_vals
                 
         

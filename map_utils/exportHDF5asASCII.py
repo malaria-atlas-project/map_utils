@@ -1,3 +1,5 @@
+__all__ = ['exportHDF5asASCII']
+
 def exportHDF5asASCII (hdfFilePath,outputpath):
 
     from map_utils import getAsciiheaderFromTemplateHDF5

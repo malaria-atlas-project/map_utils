@@ -6,6 +6,8 @@ from map_utils import getAsciiheaderFromTemplateHDF5
 from geodata_utils import cylindrical_pixel_area
 from map_utils import exportAscii
 
+__all__ = ['makePixelAreaArray']
+
 ########################################################################################################
 def makePixelAreaArray(inputHDF5template_path,outputASCII_path):
 

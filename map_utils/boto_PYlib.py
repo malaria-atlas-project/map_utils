@@ -21,6 +21,8 @@ from socket import gethostname
 import numpy as np
 from map_utils import checkAndBuildPaths
 
+__all__ = ['S3']
+
 class S3(object):
     
     def __init__(self, keyPath=None):

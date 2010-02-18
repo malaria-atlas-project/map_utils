@@ -2,6 +2,8 @@
 from map_utils import checkAndBuildPaths
 import tables as tb
 
+__all__ = ['BuildAsciiParamsInHDF5']
+
 def BuildAsciiParamsInHDF5(hdfFilePath,CELLTOLLERANCE = 1e-6,missingDefault=-9999,overwrite=False):
 
     ''' Takes and hdf5 grid file, which must have attributes: data, long, and lat

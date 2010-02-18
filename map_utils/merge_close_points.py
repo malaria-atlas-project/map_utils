@@ -1,6 +1,8 @@
 import numpy as np
 import pymc as pm
 
+__all__ = ['merge_close_points']
+
 def merge_close_points(data_mesh,disttol,ttol):
     "data_mesh should have columns lon, lat, t"
     t = data_mesh[:,2]

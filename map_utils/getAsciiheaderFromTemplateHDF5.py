@@ -1,3 +1,5 @@
+__all__ = ['getAsciiheaderFromTemplateHDF5']
+
 def getAsciiheaderFromTemplateHDF5 (hdfFilePath):
 
     import tables as tb

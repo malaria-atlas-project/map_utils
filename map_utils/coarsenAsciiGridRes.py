@@ -1,6 +1,8 @@
 import numpy as np
 from map_utils import exportAscii
 
+__all__ = ['coarsenAsciiGridRes']
+
 def coarsenAsciiGridRes(fpathin, fpathout, coarsenBy, aggregationType,overlapOption,NAoption):
     """
     creates a new ascii with resolution coarsenBy coarser than input

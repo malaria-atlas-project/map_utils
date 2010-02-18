@@ -8,7 +8,6 @@ from numpy import *
 #datafolder = "/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/"
 datafolder = "/home/pwg/mbg-world/datafiles/auxiliary_data/"
 
-
 ################################################################################################################################################
 # using row/col numbers of a subset specified for 5km grids (and stored in master_grid), extract the same subset for corresponding 1km grids
 
@@ -92,7 +91,8 @@ def subsetGlobalGrids (region,lims,gridname,resRatio = 1):
     fullHDF5.close()
     outHDF5.close()
 ################################################################################################################################################
-#from mbgw import master_grid
+
+#from mbgw import master_grid
 #datafolder = "/home/pwg/mbg-world/datafiles/auxiliary_data/GridsForCS/"
 
 
@@ -194,8 +194,8 @@ def subsetGlobalGrids (region,lims,gridname,resRatio = 1):
 #subsetGlobalGrids(region="AFGH",lims = master_grid.AFGH_lims,gridname = "urb5km-e_y-x+",resRatio=1)
 
 
-from mbgw import master_grid_MODIS
-datafolder = "/home/pwg/mbg-world/datafiles/auxiliary_data/"
+# from mbgw import master_grid_MODIS
+# datafolder = "/home/pwg/mbg-world/datafiles/auxiliary_data/"
 #subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "ndvi.mean.geographic.world.2001-to-2006",resRatio=1)
 #subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "ndvi.annual-amplitude.geographic.world.2001-to-2006",resRatio=1)
 #subsetGlobalGrids(region="AFGH",lims = master_grid_MODIS.AFGH_lims,gridname = "evi.mean.geographic.world.2001-to-2005",resRatio=1)
