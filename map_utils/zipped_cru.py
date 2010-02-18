@@ -76,7 +76,7 @@ def CRU_extract(path, fname, zip=True, dtype=None):
     long = linspace(info['min. X'], info['max. X'], info['columns'])
     lat = linspace(info['min. Y'], info['max. Y'], info['rows'])
 
-    print data.shape, long.shape, lat.shape, info['rows'], info['columns']
+    # print data.shape, long.shape, lat.shape, info['rows'], info['columns']
     
     data = reshape(data, (info['rows'], info['columns']))
 
