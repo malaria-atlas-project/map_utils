@@ -115,7 +115,6 @@ def flt_to_ndarray(fname, path='./'):
         data = np.ma.masked_array(data, mask=data==header['NODATA_value'])
 
     return long, lat, data
-
     
 def export_flt(lon,lat,data,filename,view='y-x+'):
     "filename should have no extension; the '.hdr' and '.flt' extensions will be added automatically." 

@@ -261,7 +261,7 @@ class NonSuckyShapefile(object):
             if not self.polygons[-1].is_valid:
                 self.polygons[-1] = obj_to_poly(self.sf.read_object(i), reverse=True)
             if not self.polygons[-1].is_valid:
-                raise ValueError, 'Invalid polygon %i. What the hell are you trying to pull?'%i
+                raise ValueError, 'Invalid polygon %i.'%i
         
         self.index = 0
         
