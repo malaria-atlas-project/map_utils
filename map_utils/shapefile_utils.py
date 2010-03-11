@@ -96,7 +96,7 @@ def shapely_multipoly_area(m):
     else:
         return np.sum([shapely_poly_area(p) for p in m.geoms])
 
-def multipoly_sample(n, mp):
+def multipoly_sample(n, mp, test=None, verbose=0):
     """
     Returns uniformly-distributed points on the earth's surface 
     conditioned to be inside a multipolygon.
@@ -107,7 +107,8 @@ def multipoly_sample(n, mp):
     # b = basemap.Basemap(-180,-90,180,90)
     
     if isinstance(mp, geometry.MultiPolygon):
-        print 'Breaking down multipolygon'
+        if verbose>0:
+            print 'Breaking down multipolygon'
         areas = [shapely_poly_area(p) for p in mp.geoms]
         areas = np.array(areas)/np.sum(areas)
         # ns = pm.rmultinomial(n, areas)
@@ -127,24 +128,29 @@ def multipoly_sample(n, mp):
     xmax = mp.bounds[2]*np.pi/180
     ymax = mp.bounds[3]*np.pi/180
     
-    print 'Starting: n=%i'%n
+    if verbose>0:
+        print 'Starting: n=%i'%n
     while done < n:
         x = np.atleast_1d(pm.runiform(xmin,xmax, size=n))
         y = np.atleast_1d(np.arcsin(pm.runiform(np.sin(ymin),np.sin(ymax),size=n)))
         points=[geom.Point([x[i]*180./np.pi,y[i]*180./np.pi]) for i in xrange(len(x))]
         good = list(iterops.contains(mp, points, True))
+        if test:
+            good = filter(lambda p: test(p.coords[0][0], p.coords[0][1]),good)
         n_good = min(n,len(good))
         lons[done:done+n_good] = [p.coords[0][0] for p in good][:n-done]
         lats[done:done+n_good] = [p.coords[0][1] for p in good][:n-done]
         done += n_good
-        print '\tDid %i, %i remaining.'%(n_good,n-done)
+        if verbose>0:
+            print '\tDid %i, %i remaining.'%(n_good,n-done)
         
         # plot_unit(b,mp)
         # b.plot(x*180./np.pi,y*180./np.pi,'r.')
         # 
         # from IPython.Debugger import Pdb
         # Pdb(color_scheme='Linux').set_trace()   
-    print 'Filled'
+    if verbose>0:
+        print 'Filled'
     return lons, lats
 
 def unit_to_grid(unit, lon_min, lat_min, cellsize):
