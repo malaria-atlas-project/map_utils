@@ -116,7 +116,8 @@ def multipoly_sample(n, mp, test=None, verbose=0):
         ns = np.diff(stair)
         locs = [multipoly_sample(ns[i], mp.geoms[i]) for i in np.where(ns>0)[0]]
         return np.concatenate([loc[0] for loc in locs]), np.concatenate([loc[1] for loc in locs])
-        
+    else:
+        print mp.__class__    
     
     lons = np.empty(n)
     lats = np.empty(n)
