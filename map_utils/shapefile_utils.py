@@ -129,6 +129,7 @@ def multipoly_sample(n, mp, test=None, verbose=0):
         xmax = mp.bounds[2]*np.pi/180
         ymax = mp.bounds[3]*np.pi/180
     except ValueError:
+        print mp.__class__
         print areas
     
     if verbose>0:
