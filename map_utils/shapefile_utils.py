@@ -125,8 +125,7 @@ def multipoly_sample(n, mp, test=None, verbose=0):
     ymin = mp.bounds[1]*np.pi/180
     xmax = mp.bounds[2]*np.pi/180
     ymax = mp.bounds[3]*np.pi/180
-        
-        print areas
+    
     
     if verbose>0:
         print 'Starting: n=%i'%n
