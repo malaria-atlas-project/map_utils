@@ -136,7 +136,7 @@ def export_flt(lon,lat,data,filename,view='y-x+'):
         hfile.write('%s\t%s\r\n'%(k,v))
     hfile.close()
     dfile = io.npfile(filename+'.flt', order='C', endian='<', permission='w')
-    dfile.write_array(data.filled())
+    dfile.write_array(data.filled().astype('float32'))
     dfile.close()
 
 def exportAscii (arr,filename,headerDict,mask=0):
