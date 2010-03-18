@@ -114,7 +114,7 @@ def multipoly_sample(n, mp, test=None, verbose=0):
         # ns = pm.rmultinomial(n, areas)
         stair = np.array(np.concatenate(([0],np.cumsum(areas*n))),dtype='int')
         ns = np.diff(stair)
-        locs = [multipoly_sample(ns[i], mp.geoms[i]) for i in np.where(ns>0)[0]]
+        locs = [multipoly_sample(ns[i], mp.geoms[i], test) for i in np.where(ns>0)[0]]
         return np.concatenate([loc[0] for loc in locs]), np.concatenate([loc[1] for loc in locs])
     
     lons = np.empty(n)
@@ -150,6 +150,9 @@ def multipoly_sample(n, mp, test=None, verbose=0):
         # Pdb(color_scheme='Linux').set_trace()   
     if verbose>0:
         print 'Filled'
+    if test:
+        if not np.all([test(lon,lat) for lon,lat in zip(lons,lats)]):
+            raise ValueError, 'Test failed at some outputs'
     return lons, lats
 
 def unit_to_grid(unit, lon_min, lat_min, cellsize):
