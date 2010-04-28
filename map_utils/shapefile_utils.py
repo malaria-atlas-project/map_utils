@@ -110,12 +110,17 @@ def multipoly_sample(n, mp, test=None, verbose=0):
         if verbose>0:
             print 'Breaking down multipolygon'
         areas = [shapely_poly_area(p) for p in mp.geoms]
-        areas = np.array(areas)/np.sum(areas)
+        areas = np.array(areas)
+        areas /= areas.sum()
         # ns = pm.rmultinomial(n, areas)
-        stair = np.array(np.concatenate(([0],np.cumsum(areas*n))),dtype='int')
+        stair = np.round(np.concatenate(([0],np.cumsum(areas*n)))).astype('int')
         ns = np.diff(stair)
-        locs = [multipoly_sample(ns[i], mp.geoms[i]) for i in np.where(ns>0)[0]]
-        return np.concatenate([loc[0] for loc in locs]), np.concatenate([loc[1] for loc in locs])
+        locs = [multipoly_sample(ns[i], mp.geoms[i], test) for i in np.where(ns>0)[0]]
+        lons = np.concatenate([loc[0] for loc in locs])
+        lats = np.concatenate([loc[1] for loc in locs])
+        if len(lons)!=n or len(lats)!=n:
+            raise ValueError
+        return lons, lats
     
     lons = np.empty(n)
     lats = np.empty(n)
@@ -150,6 +155,11 @@ def multipoly_sample(n, mp, test=None, verbose=0):
         # Pdb(color_scheme='Linux').set_trace()   
     if verbose>0:
         print 'Filled'
+    if test:
+        if not np.all([test(lon,lat) for lon,lat in zip(lons,lats)]):
+            raise ValueError, 'Test failed at some outputs'
+    if len(lons)!=n or len(lats)!=n:
+        raise ValueError
     return lons, lats
 
 def unit_to_grid(unit, lon_min, lat_min, cellsize):
