@@ -91,7 +91,6 @@ def reexport_ascii(fname, path='./'):
 
 def flt_to_ndarray(fname, path='./'):
     "fname should have no extension; the '.hdr' and '.flt' extensions will be added automatically."
-    from scipy import io
 
     header, headlines = get_header(fname+'.hdr', path)
     
@@ -106,10 +105,15 @@ def flt_to_ndarray(fname, path='./'):
         endian='<'
     else:
         endian='>'
+
+    data = np.empty((nrows,ncols), dtype='float32')
+    dfile = file(os.path.join(path,fname)+'.flt', 'rb')
+    for i in xrange(nrows):
+        data[i,:] = np.fromstring(dfile.read(4*ncols), dtype='float32')
     
-    dfile = io.npfile(os.path.join(path,fname)+'.flt', order='C', endian=endian)
-    data = dfile.read_array(np.float32, shape=(nrows,ncols))
-    dfile.close()
+    # dfile = io.npfile(os.path.join(path,fname)+'.flt', order='C', endian=endian)
+    # data = dfile.read_array(np.float32, shape=(nrows,ncols))
+    # dfile.close()
     
     if header.has_key('NODATA_value'):
         data = np.ma.masked_array(data, mask=data==header['NODATA_value'])
@@ -136,7 +140,7 @@ def export_flt(lon,lat,data,filename,view='y-x+'):
         hfile.write('%s\t%s\r\n'%(k,v))
     hfile.close()
     dfile = io.npfile(filename+'.flt', order='C', endian='<', permission='w')
-    dfile.write_array(data.filled())
+    dfile.write_array(data.filled().astype('float32'))
     dfile.close()
 
 def exportAscii (arr,filename,headerDict,mask=0):
