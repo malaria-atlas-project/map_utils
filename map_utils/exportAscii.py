@@ -89,11 +89,12 @@ def reexport_ascii(fname, path='./'):
     
     exportAscii(data.data, fname, header, True-data.mask)
 
-def flt_to_ndarray(fname, path='./'):
+def flt_to_ndarray(fname, path='./', chunk=1e9/2):
     "fname should have no extension; the '.hdr' and '.flt' extensions will be added automatically."
 
     header, headlines = get_header(fname+'.hdr', path)
-    
+    from scipy import io
+
     ncols = header['ncols']
     nrows = header['nrows']
     cellsize = header['cellsize']
@@ -107,9 +108,13 @@ def flt_to_ndarray(fname, path='./'):
         endian='>'
 
     data = np.empty((nrows,ncols), dtype='float32')
-    dfile = file(os.path.join(path,fname)+'.flt', 'rb')
-    for i in xrange(nrows):
-        data[i,:] = np.fromstring(dfile.read(4*ncols), dtype='float32')
+    
+    rowchunk = max(int(chunk/4/ncols),1)
+    for i in xrange(0,nrows,rowchunk):
+        dfile = io.npfile(os.path.join(path, fname)+'.flt', order='C', endian=endian)
+        dfile.seek(4*ncols*i)
+        data[i:i+rowchunk,:] = dfile.read_array(np.float32, shape=(-1,ncols))
+        dfile.close()
     
     # dfile = io.npfile(os.path.join(path,fname)+'.flt', order='C', endian=endian)
     # data = dfile.read_array(np.float32, shape=(nrows,ncols))
