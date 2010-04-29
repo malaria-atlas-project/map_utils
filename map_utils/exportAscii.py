@@ -107,14 +107,20 @@ def flt_to_ndarray(fname, path='./', chunk=1e9/2):
     else:
         endian='>'
 
-    data = np.empty((nrows,ncols), dtype='float32')
-    
+    # This has to be zeros. If it's empty, there will be a memory leak while it gets filled.
+    data = np.zeros((nrows,ncols), dtype='float32')
     rowchunk = max(int(chunk/4/ncols),1)
+#    print 'Starting'
+    import gc
     for i in xrange(0,nrows,rowchunk):
+#        print i
         dfile = io.npfile(os.path.join(path, fname)+'.flt', order='C', endian=endian)
         dfile.seek(4*ncols*i)
-        data[i:i+rowchunk,:] = dfile.read_array(np.float32, shape=(-1,ncols))
+        data[i:i+rowchunk,:] = dfile.read_array(np.float32, shape=data[i:i+rowchunk,:].shape)
         dfile.close()
+        del dfile
+        gc.collect()
+    print 'Done'
     
     # dfile = io.npfile(os.path.join(path,fname)+'.flt', order='C', endian=endian)
     # data = dfile.read_array(np.float32, shape=(nrows,ncols))
