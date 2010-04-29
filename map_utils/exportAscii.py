@@ -120,7 +120,7 @@ def flt_to_ndarray(fname, path='./', chunk=1e9/2):
         dfile.close()
         del dfile
         gc.collect()
-    print 'Done'
+    # print 'Done'
     
     # dfile = io.npfile(os.path.join(path,fname)+'.flt', order='C', endian=endian)
     # data = dfile.read_array(np.float32, shape=(nrows,ncols))
