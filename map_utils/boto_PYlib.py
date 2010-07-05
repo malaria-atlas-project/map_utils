@@ -13,6 +13,7 @@ from boto.s3.connection import S3Connection
 import random
 import sys
 import string
+from types import *
 import os
 import time
 import md5
@@ -164,7 +165,7 @@ class S3(object):
         return(0)
 
 
-    def uploadFileToBucket(self, bucketName,filePath,overwriteContent,makeBucket,VERBOSE=True):
+    def uploadFileToBucket(self, bucketName,filePath,overwriteContent,makeBucket,VERBOSE=True,newName=None):
 
         '''
         Allows simple copying of a single local file to a specified bucket.
@@ -174,6 +175,7 @@ class S3(object):
         filePath                : (string) full path of file on local machine that will be copied
         overwriteContent        : (logical) if an object of this name already exists in the bucket, do we want to overwrite?
         makeBucket              : (logical) if the specified bucket does not exist, do we want to make it?
+        newName                 : (string) if given then file on bucket will adopt this new name, if 'None' (default) then will be same as original
         '''
 
         #ensure input is string
@@ -214,15 +216,22 @@ class S3(object):
         ## establish key object
         k = boto.s3.key.Key(bucket)
 
-        ## give this key the same name as the file
-        k.key = str(fileName)
+
+        # if a new filname is supplied, name the key this....
+        if isinstance(newName,NoneType)==False:
+            k.key = str(newName)
+
+        # ....otherwise give this key the same name as the file
+        if isinstance(newName,NoneType):
+            k.key = str(fileName)
 
         ## pass this file to S3 using the key
         k.set_contents_from_filename(filePath)
+        
     
         # finally, check that this file made it to S3
         md5string = md5.new(file(filePath).read()).hexdigest()
-        if (self.CheckFileExistsInBucket(bucketName,fileName,md5check = md5string) != True) :
+        if (self.CheckFileExistsInBucket(bucketName,k.key,md5check = md5string) != True) :
             raise RuntimeError, 'Final check revealed file "'+str(filePath)+'" did not copy succesfully to S3 bucket '+str(bucketName)+': EXITING!!!'
 
         return(0)
