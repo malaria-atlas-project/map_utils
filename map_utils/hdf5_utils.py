@@ -88,7 +88,7 @@ def bilinear_resample_hdf5(hfroot, lon, lat):
     if hasattr(hfroot,'mask'):
         normfac = wts[0,0]+wts[0,1]+wts[1,0]+wts[1,1]
         r[np.where(normfac>0)] /= normfac[np.where(normfac>0)]
-        r = np.ma.masked_array(r, mask = normfac==0)    
+        r = np.ma.masked_array(r, mask = normfac==0)
     
     if view[0]=='y':
         r=r.T

@@ -107,7 +107,7 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
             data = ma.MaskedArray(data, mask)
         dconv = grid_convert(data,view,'y+x+')        
         for i in xrange(N_new):
-            out_vals[i] = basemap.interp(dconv,lon_old,lat_old,lon_new[i],lat_new[i],order=order)
+            out_vals[i] = basemap.interp(dconv,lon_old,lat_old,lon_new[i:i+1],lat_new[i:i+1],order=order)
     
         if nan_handler is not None:
             where_nan = np.where(np.isnan(out_vals))

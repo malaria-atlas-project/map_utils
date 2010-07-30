@@ -49,6 +49,9 @@ __all__ = ['polygon_area', 'unit_to_grid', 'exclude_ues', 'plot_unit', 'obj_to_p
 #     """
 #     return multipoly_sample(n, land_multipoly)
 
+def multipolygon_from_geojson(s):
+    return MultiPolygon([(p[0], p[1:]) for p in geojson.loads(s)['coordinates']])
+
 def polygon_area(v):
     """
     Assumes 'v' is a counterclockwise array of (x,y) coordinates, with 
