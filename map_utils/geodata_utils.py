@@ -3,7 +3,7 @@ from numpy import ma
 import numpy as np
 import warnings
 
-__all__ = ['display_surface', 'interp_geodata', 'cylindrical_area_correction', 'cylindrical_pixel_area', 'validate_format_str', 'grid_convert']
+__all__ = ['display_surface', 'interp_geodata', 'cylindrical_area_correction', 'cylindrical_pixel_area', 'validate_format_str', 'grid_convert','get_rectangular_subset','patch_rectangular_subset']
 
 def validate_format_str(st):
     for i in [0,2]:
@@ -15,7 +15,6 @@ def validate_format_str(st):
             
     if st[0]==st[2]:
         raise ValueError, 'Directions must be different'
-    
     
 def grid_convert(g, frm, to, validate=False):
     """Converts a grid to a new layout.
@@ -163,4 +162,22 @@ def interp_geodata(lon_old, lat_old, data, lon_new, lat_new, mask=None, chunk=No
 
     return out_vals
                 
-        
+
+def get_rectangular_subset(lon,lat,data,view,xmin,xmax,ymin,ymax,buffer=0):
+    imin = np.argmin(np.abs(lon-xmin))
+    imax = np.argmin(np.abs(lon-xmax))
+    jmin = np.argmin(np.abs(lat-ymin))
+    jmax = np.argmin(np.abs(lat-ymax))
+
+    return grid_convert(grid_convert(data,view,'x+y+')[imin-buffer:imax+1+buffer,jmin-buffer:jmax+1+buffer],'x+y+',view)        
+
+def patch_rectangular_subset(lon,lat,data,view,xmin,xmax,ymin,ymax,patch):
+    imin = np.argmin(np.abs(lon-xmin))
+    imax = np.argmin(np.abs(lon-xmax))
+    jmin = np.argmin(np.abs(lat-ymin))
+    jmax = np.argmin(np.abs(lat-ymax))
+    
+    new_data = grid_convert(data,view,'x+y+')
+    new_data[imin:imax+1,jmin:jmax+1]=grid_convert(patch,view,'x+y+')
+    
+    return grid_convert(new_data,'x+y+',view)
