@@ -74,14 +74,16 @@ cf2py intent(hide) nd, na
                 
 !               Find bin
                 flag=.TRUE.
-                do k=1,nb
-                    if (FLAG) then
-                        if ((dist(i,j)*r.LE.blf(k)+bw)) then
-                            flag=.FALSE.
-                            b=k
+                if (dist(i,j).GT.0.0D0) then                    
+                    do k=1,nb
+                        if (FLAG) then
+                            if ((dist(i,j)*r.LE.blf(k)+bw)) then
+                                flag=.FALSE.
+                                b=k
+                            end if
                         end if
-                    end if
-                end do
+                    end do
+                end if
                 if (.not.flag) then
 
 !                   Find angle

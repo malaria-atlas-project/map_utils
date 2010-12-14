@@ -32,7 +32,7 @@ def export_raster(lon,lat,data,name,path,type,view='y-x+'):
     lon = np.sort(lon)
     lat = np.sort(lat)
     if type=='asc':
-        exportAscii2(lon,lat,data,os.path.join(path,name+'.asc'))
+        exportAscii2(lon,lat,data,os.path.join(path,name+'.asc'),view)
     elif type=='hdf5':
         hf = tb.openFile(os.path.join(path,name+'.hdf5'),'w')
         hf.createArray('/','lon',lon)
@@ -44,6 +44,6 @@ def export_raster(lon,lat,data,name,path,type,view='y-x+'):
         hf.root.data.attrs.view=view
         hf.close()
     elif type=='flt':
-        export_flt(lon,lat,data,os.path.join(path,name))
+        export_flt(lon,lat,data,os.path.join(path,name),view)
     else:
         raise NotImplementedError, 'Do not know how to export raster type %s'%type

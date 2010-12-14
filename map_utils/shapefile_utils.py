@@ -5,11 +5,12 @@ import matplotlib
 # from matplotlib.nxutils import points_inside_poly
 from shapely import geometry, iterops, wkb, wkt
 import shapely.geometry as geom
+from geodata_utils import grid_convert
 import pymc as pm
 from csv import reader
 
-__all__ = ['polygon_area', 'unit_to_grid', 'exclude_ues', 'plot_unit', 'obj_to_poly', 'NonSuckyShapefile','multipoly_sample',
-            'sphere_poly_area','shapely_poly_area','shapely_multipoly_area']
+__all__ = ['polygon_area', 'unit_to_grid', 'exclude_ues', 'plot_unit', 'obj_to_poly', 'Shapefile','multipoly_sample',
+            'sphere_poly_area','shapely_poly_area','shapely_multipoly_area','box_inside_box','rastervals_in_unit']
     
 # def inregion(x,y,r):
 #     """
@@ -48,6 +49,9 @@ __all__ = ['polygon_area', 'unit_to_grid', 'exclude_ues', 'plot_unit', 'obj_to_p
 #     taking integrals.
 #     """
 #     return multipoly_sample(n, land_multipoly)
+
+def box_inside_box(b1,b2):
+    return b1[0]>=b2[0] and b1[1]>=b2[1] and b1[2]<=b2[2] and b1[3]<=b2[3]
 
 def multipolygon_from_geojson(s):
     return MultiPolygon([(p[0], p[1:]) for p in geojson.loads(s)['coordinates']])
@@ -152,12 +156,7 @@ def multipoly_sample(n, mp, test=None, verbose=0):
         done += n_good
         if verbose>0:
             print '\tDid %i, %i remaining.'%(n_good,n-done)
-        
-        # plot_unit(b,mp)
-        # b.plot(x*180./np.pi,y*180./np.pi,'r.')
-        # 
-        # from IPython.Debugger import Pdb
-        # Pdb(color_scheme='Linux').set_trace()   
+    
     if verbose>0:
         print 'Filled'
     if test:
@@ -168,6 +167,25 @@ def multipoly_sample(n, mp, test=None, verbose=0):
         raise ValueError
 
     return lons, lats
+
+def rastervals_in_unit(unit, lon_min, lat_min, cellsize, data, view='y-x+'):
+    llc = unit.bounds[:2]
+    urc = unit.bounds[2:]
+    
+    lon_min_in = int((llc[0]-lon_min)/cellsize)
+    lon_max_in = int((urc[0]-lon_min)/cellsize)+1
+    lat_min_in = int((llc[1]-lat_min)/cellsize)
+    lat_max_in = int((urc[1]-lat_min)/cellsize)+1  
+    
+    data_boxed = grid_convert(data,view,'x+y+')[lon_min_in:lon_max_in+1,lat_min_in:lat_max_in+1].ravel()
+    lon_boxed = np.arange(lon_min_in, lon_max_in+1)*cellsize + lon_min
+    lat_boxed = np.arange(lat_min_in, lat_max_in+1)*cellsize + lat_min
+    
+    mlon_boxed, mlat_boxed = np.meshgrid(lon_boxed, lat_boxed)
+    
+    p=[geom.Point(*pair) for pair in zip(mlon_boxed.ravel(), mlat_boxed.ravel())]
+
+    return data_boxed.ravel()[np.where([unit.contains(p_) for p_ in p])]
 
 def unit_to_grid(unit, lon_min, lat_min, cellsize):
     """
@@ -260,9 +278,9 @@ def obj_to_poly(shape_obj, reverse=False):
         return geom.MultiPolygon([(v[0], v[1:])])
     
 
-class NonSuckyShapefile(object):
+class Shapefile(object):
     """
-    S = NonSuckyShapefile(fname)
+    S = Shapefile(fname)
     
     Holds some information about fname, and supports iteration and getiteming.
     Also has method plotall(b, *args, **kwargs).

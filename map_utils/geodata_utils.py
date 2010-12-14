@@ -169,7 +169,7 @@ def get_rectangular_subset(lon,lat,data,view,xmin,xmax,ymin,ymax,buffer=0):
     jmin = np.argmin(np.abs(lat-ymin))
     jmax = np.argmin(np.abs(lat-ymax))
 
-    return grid_convert(grid_convert(data,view,'x+y+')[imin-buffer:imax+1+buffer,jmin-buffer:jmax+1+buffer],'x+y+',view)        
+    return lon[imin-buffer:imax+1+buffer], lat[jmin-buffer:jmax+1+buffer], grid_convert(grid_convert(data,view,'x+y+')[imin-buffer:imax+1+buffer,jmin-buffer:jmax+1+buffer],'x+y+',view)        
 
 def patch_rectangular_subset(lon,lat,data,view,xmin,xmax,ymin,ymax,patch):
     imin = np.argmin(np.abs(lon-xmin))

@@ -66,7 +66,7 @@ def RST_extract(path, fname, zip=True, dtype=None):
         else:
             out= fromfile(data, dtype=dtype)
         data.close()
-        return out    
+        return out
 
 def CRU_extract(path, fname, zip=True, dtype=None):
     """Converts RST and RDC file pair to long, lat, data tuple."""
