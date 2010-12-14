@@ -109,9 +109,9 @@ cf2py intent(hide) nd, na
         
 !         Add self-pairs (zero distances)
 !         Or maybe not... geoR doesn't do this, and it kind of doesn't make sense to do it.
-        do k=1,na
-            c(k,1)=c(k,1)*N(k,1)/(N(k,1)+nd*0.5D0)
-        end do
+!         do k=1,na
+!             c(k,1)=c(k,1)*N(k,1)/(N(k,1)+nd*0.5D0)
+!         end do
       
       RETURN
       END
