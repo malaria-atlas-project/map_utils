@@ -216,6 +216,76 @@ def asc_to_hdf5(fname, path='./'):
     
     return h5file
 
+def flt_to_hdf5(fname, path='./'):
+    """
+    generates an hdf5 format file from an ArcGIS style .flt/.hdr file pair
+    fname can include or exclude .flt suffix
+    """
+
+    # check for and remove any file suffixes
+    if(str.find(fname,".flt")!=-1):
+        fname=str.split(fname,".flt")[0]    
+    
+    if(str.find(fname,".hdr")!=-1):
+        fname=str.split(fname,".hdr")[0]    
+
+    #  import .hdr file and parse header info
+    f = file(path+fname+".hdr",'r')
+    ncols = int(str.strip(str.rsplit(f.readline()," ")[-1],"\r\n"))
+    nrows = int(str.strip(str.rsplit(f.readline()," ")[-1],"\r\n"))
+    xllcorner = float(str.strip(str.rsplit(f.readline()," ")[-1],"\r\n"))
+    yllcorner = float(str.strip(str.rsplit(f.readline()," ")[-1],"\r\n"))
+    cellsize = float(str.strip(str.rsplit(f.readline()," ")[-1],"\r\n"))
+    NODATA_value = int(str.strip(str.rsplit(f.readline()," ")[-1],"\r\n"))
+    byteorder = str.strip(str.rsplit(f.readline()," ")[-1],"\r\n")   
+   
+    # Make longitude and latitude vectors.    
+    long = xllcorner + arange(ncols) * cellsize
+    lat = yllcorner + arange(nrows) * cellsize
+    
+    # Initialize hdf5 archive.
+    h5file = openFile(path+fname+'.hdf5', mode='w', title=fname[:-4] + ' in hdf5 format')
+
+    # Write hdf5 archive metadata.
+    h5file.root._v_attrs.flt_file = path + fname
+    h5file.root._v_attrs.ncols = ncols
+    h5file.root._v_attrs.nrows = nrows
+    h5file.root._v_attrs.missing = NODATA_value
+    h5file.root._v_attrs.minx = long.min()
+    h5file.root._v_attrs.maxx = long.max()
+    h5file.root._v_attrs.miny = lat.min()
+    h5file.root._v_attrs.maxy = lat.max()
+    h5file.root._v_attrs.byteorder = byteorder
+
+    
+    # Add longitude and latitude to archive, uncompressed.
+    h5file.createArray('/','long',long)
+    h5file.createArray('/','lat',lat)
+    
+    #  open .flt file
+#    f = open(path+fname+".flt",'rb')
+    f = file(path+fname+".flt",'rb')
+
+    # read in binary file as one long array, bearing in min endian-ness
+
+    if(byteorder=="LSBFIRST" | byteorder=="lsbfirst"):
+        dataarray=np.fromfile(f,dtype=np.dtype('<f4'))
+
+    if(byteorder=="MSBFIRST" | byteorder=="lsbfirst"):
+        dataarray=np.fromfile(f,dtype=np.dtype('>f4'))
+
+    # check length of array makes sense given header dimensions
+    if((ncols*nrows)!=dataarray.shape[0]):
+        raise ValueError ("imported binary array has "+str(dataarray.shape[0])+" elements. Expected "+str(nrows)+"x"+str(ncols)+"="+str(nrows*ncols)) 
+
+    
+    # Add data to archive, heavily compressed, row-by-row (if a row won't fit in memory, the whole array won't fit on disk).
+    h5file.createCArray('/', 'data', Float64Atom(), (nrows, ncols), filters = Filters(complevel=9, complib='zlib'))    
+    data = h5file.root.data
+    for i in xrange(nrows):
+        data[-i-1,:] = dataarray[(i*ncols):((i*ncols)+ncols)]
+    
+    return h5file    
 
 
 def CRU_to_hdf5(fname, path='./'):
