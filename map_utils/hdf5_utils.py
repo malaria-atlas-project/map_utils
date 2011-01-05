@@ -216,7 +216,7 @@ def asc_to_hdf5(fname, path='./'):
     
     return h5file
 
-def flt_to_hdf5(fname, path='./'):
+def flt_to_hdf5(fname, path='./',mapView=True):
     """
     generates an hdf5 format file from an ArcGIS style .flt/.hdr file pair
     fname can include or exclude .flt suffix
@@ -242,9 +242,11 @@ def flt_to_hdf5(fname, path='./'):
     # Make longitude and latitude vectors.    
     long = xllcorner + arange(ncols) * cellsize
     lat = yllcorner + arange(nrows) * cellsize
+    if (mapView == True): lat = lat[::-1]
     
     # Initialize hdf5 archive.
-    h5file = openFile(path+fname+'.hdf5', mode='w', title=fname[:-4] + ' in hdf5 format')
+    if mapView==True:h5file = openFile(path+fname+'_y-x+''.hdf5', mode='w', title=fname[:-4] + ' in hdf5 format')
+    if mapView==False:h5file = openFile(path+fname+'_y+x+''.hdf5', mode='w', title=fname[:-4] + ' in hdf5 format')
 
     # Write hdf5 archive metadata.
     h5file.root._v_attrs.flt_file = path + fname
@@ -256,7 +258,9 @@ def flt_to_hdf5(fname, path='./'):
     h5file.root._v_attrs.miny = lat.min()
     h5file.root._v_attrs.maxy = lat.max()
     h5file.root._v_attrs.byteorder = byteorder
-
+    h5file.root._v_attrs.cellsize = cellsize
+    if mapView==True:h5file.root._v_attrs.order = 'y-x+'
+    if mapView==False:h5file.root._v_attrs.order = 'y+x+'  
     
     # Add longitude and latitude to archive, uncompressed.
     h5file.createArray('/','long',long)
@@ -268,10 +272,10 @@ def flt_to_hdf5(fname, path='./'):
 
     # read in binary file as one long array, bearing in min endian-ness
 
-    if(byteorder=="LSBFIRST" | byteorder=="lsbfirst"):
+    if((byteorder=="LSBFIRST") | (byteorder=="lsbfirst")):
         dataarray=np.fromfile(f,dtype=np.dtype('<f4'))
 
-    if(byteorder=="MSBFIRST" | byteorder=="lsbfirst"):
+    if((byteorder=="MSBFIRST") | (byteorder=="lsbfirst")):
         dataarray=np.fromfile(f,dtype=np.dtype('>f4'))
 
     # check length of array makes sense given header dimensions
@@ -283,7 +287,10 @@ def flt_to_hdf5(fname, path='./'):
     h5file.createCArray('/', 'data', Float64Atom(), (nrows, ncols), filters = Filters(complevel=9, complib='zlib'))    
     data = h5file.root.data
     for i in xrange(nrows):
-        data[-i-1,:] = dataarray[(i*ncols):((i*ncols)+ncols)]
+        if mapView==False:
+            data[-i-1,:] = dataarray[(i*ncols):((i*ncols)+ncols)]
+        if mapView==True:
+            data[i,:] = dataarray[(i*ncols):((i*ncols)+ncols)] 
     
     return h5file    
 
