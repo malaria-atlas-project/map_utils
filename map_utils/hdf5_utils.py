@@ -6,7 +6,7 @@ import os
 import numpy as np
 import warnings
 
-__all__ = ['table_to_recarray', 'hdf5_to_recarray', 'recarray_to_hdf5', 'hdf5_all_data', 'asc_to_hdf5', 'CRU_to_hdf5', 'interp_hdf5', 'windowed_extraction','bilinear_resample_hdf5']
+__all__ = ['table_to_recarray', 'hdf5_to_recarray', 'recarray_to_hdf5', 'hdf5_all_data', 'asc_to_hdf5','flt_to_hdf5', 'CRU_to_hdf5', 'interp_hdf5', 'windowed_extraction','bilinear_resample_hdf5']
 
 def normalize_for_mapcoords(arr, fro, to):
     "Used to create inputs to ndimage.map_coordinates."
