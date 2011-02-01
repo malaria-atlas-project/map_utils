@@ -177,15 +177,20 @@ def rastervals_in_unit(unit, lon_min, lat_min, cellsize, data, view='y-x+'):
     lat_min_in = int((llc[1]-lat_min)/cellsize)
     lat_max_in = int((urc[1]-lat_min)/cellsize)+1  
     
-    data_boxed = grid_convert(data,view,'x+y+')[lon_min_in:lon_max_in+1,lat_min_in:lat_max_in+1].ravel()
+    data_boxed = grid_convert(data,view,'x+y+')[lon_min_in:lon_max_in+1,lat_min_in:lat_max_in+1]
+    flat_shape = (-1,)+data_boxed.shape[2:]
+    data_boxed = data_boxed.reshape(flat_shape)
     lon_boxed = np.arange(lon_min_in, lon_max_in+1)*cellsize + lon_min
     lat_boxed = np.arange(lat_min_in, lat_max_in+1)*cellsize + lat_min
     
     mlon_boxed, mlat_boxed = np.meshgrid(lon_boxed, lat_boxed)
+    mlon_boxed = grid_convert(mlon_boxed,'y+x+','x+y+')
+    mlat_boxed = grid_convert(mlat_boxed,'y+x+','x+y+')
     
     p=[geom.Point(*pair) for pair in zip(mlon_boxed.ravel(), mlat_boxed.ravel())]
+    out = data_boxed[np.where([unit.contains(p_) for p_ in p])]    
 
-    return data_boxed.ravel()[np.where([unit.contains(p_) for p_ in p])]
+    return out
 
 def unit_to_grid(unit, lon_min, lat_min, cellsize):
     """

@@ -6,6 +6,7 @@ from map_utils import *
 __all__ = ['import_raster', 'export_raster']
 
 def import_raster(name,path,type=None):
+    "Always returns rasters in the 'y-x+' view."
     known_types = ['asc','hdf5','flt','RDC.zip','rdc']
     if type is None:
         for type in known_types:

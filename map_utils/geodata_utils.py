@@ -3,7 +3,7 @@ from numpy import ma
 import numpy as np
 import warnings
 
-__all__ = ['display_surface', 'interp_geodata', 'cylindrical_area_correction', 'cylindrical_pixel_area', 'validate_format_str', 'grid_convert','get_rectangular_subset','patch_rectangular_subset']
+__all__ = ['display_surface', 'interp_geodata', 'cylindrical_area_correction', 'cylindrical_pixel_area', 'validate_format_str', 'grid_convert','get_rectangular_subset','patch_rectangular_subset','lonlat_to_meshgrid']
 
 def validate_format_str(st):
     for i in [0,2]:
@@ -37,7 +37,7 @@ def grid_convert(g, frm, to, validate=False):
 
     # Transpose if necessary
     if not frm[0]==to[0]:
-        g = g.T
+        g = np.transpose(g,axes=[1,0]+range(2,len(g.shape)))
 
     first_dir = to[1]
     if not first_dir == frm[frm.find(to[0])+1]:
@@ -52,6 +52,13 @@ def grid_convert(g, frm, to, validate=False):
     # print first_dir, sec_dir
     return g
 
+def lonlat_to_meshgrid(lon, lat, type='y+x+'):
+    """
+    Returns a matrix of longitudes dstacked with a matrix of latitudes,
+    laid out in the requested view.
+    """
+    X = np.dstack(np.meshgrid(lon,lat))
+    return grid_convert(X,'y+x+',type)
 
 def display_surface(lon, lat, data):
     """Displays CRU data on a map."""
