@@ -169,6 +169,11 @@ def multipoly_sample(n, mp, test=None, verbose=0):
     return lons, lats
 
 def rastervals_in_unit(unit, lon_min, lat_min, cellsize, data, view='y-x+'):
+
+    # For some reason it is MUCH faster to do it this way.
+    if isinstance(unit, geometry.multipolygon.MultiPolygon):
+        return np.hstack(*[rastervals_in_unit(g,lon_min,lat_min,cellsize,data,view) for g in unit.geoms])
+
     llc = unit.bounds[:2]
     urc = unit.bounds[2:]
     
@@ -177,9 +182,9 @@ def rastervals_in_unit(unit, lon_min, lat_min, cellsize, data, view='y-x+'):
     lat_min_in = int((llc[1]-lat_min)/cellsize)
     lat_max_in = int((urc[1]-lat_min)/cellsize)+1  
     
-    data_boxed = grid_convert(data,view,'x+y+')[lon_min_in:lon_max_in+1,lat_min_in:lat_max_in+1]
-    flat_shape = (-1,)+data_boxed.shape[2:]
-    data_boxed = data_boxed.reshape(flat_shape)
+    data_boxed_ = grid_convert(data,view,'x+y+')[lon_min_in:lon_max_in+1,lat_min_in:lat_max_in+1]
+    flat_shape = (-1,)+data_boxed_.shape[2:]
+    data_boxed = data_boxed_.reshape(flat_shape)
     lon_boxed = np.arange(lon_min_in, lon_max_in+1)*cellsize + lon_min
     lat_boxed = np.arange(lat_min_in, lat_max_in+1)*cellsize + lat_min
     
@@ -188,8 +193,10 @@ def rastervals_in_unit(unit, lon_min, lat_min, cellsize, data, view='y-x+'):
     mlat_boxed = grid_convert(mlat_boxed,'y+x+','x+y+')
     
     p=[geom.Point(*pair) for pair in zip(mlon_boxed.ravel(), mlat_boxed.ravel())]
-    out = data_boxed[np.where([unit.contains(p_) for p_ in p])]    
-
+    p_in = iterops.contains(unit, p, True)
+    i_in = [p.index(p_in_) for p_in_ in p]
+    out = data_boxed[i_in]    
+    
     return out
 
 def unit_to_grid(unit, lon_min, lat_min, cellsize):
