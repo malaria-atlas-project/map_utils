@@ -172,7 +172,7 @@ def rastervals_in_unit(unit, lon_min, lat_min, cellsize, data, view='y-x+'):
 
     # For some reason it is MUCH faster to do it this way.
     if isinstance(unit, geometry.multipolygon.MultiPolygon):
-        return np.hstack(*[rastervals_in_unit(g,lon_min,lat_min,cellsize,data,view) for g in unit.geoms])
+        return np.hstack([rastervals_in_unit(g,lon_min,lat_min,cellsize,data,view) for g in unit.geoms])
 
     llc = unit.bounds[:2]
     urc = unit.bounds[2:]
