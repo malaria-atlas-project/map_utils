@@ -194,7 +194,7 @@ def rastervals_in_unit(unit, lon_min, lat_min, cellsize, data, view='y-x+'):
     
     p=[geom.Point(*pair) for pair in zip(mlon_boxed.ravel(), mlat_boxed.ravel())]
     p_in = iterops.contains(unit, p, True)
-    i_in = [p.index(p_in_) for p_in_ in p]
+    i_in = [p.index(p_in_) for p_in_ in p_in]
     out = data_boxed[i_in]    
     
     return out
