@@ -196,7 +196,7 @@ def rastervals_in_unit(unit, lon_min, lat_min, cellsize, data, view='y-x+'):
     if isinstance(unit, geometry.polygon.Polygon):
         p_in = set(iterops.contains(geometry.polygon.Polygon(unit.exterior.coords), p, True))
         for hole in unit.interiors:
-            p_in -= set(iterops.contains(geometry.polygon.Polygon(hole), p, True))
+            p_in -= set(iterops.contains(geometry.polygon.Polygon(hole.coords), p, True))
     else:
         p_in = iterops.contains(unit, p, True)
     i_in = [p.index(p_in_) for p_in_ in p_in]
