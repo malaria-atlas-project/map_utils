@@ -193,6 +193,8 @@ def rastervals_in_unit(unit, lon_min, lat_min, cellsize, data, view='y-x+'):
     mlat_boxed = grid_convert(mlat_boxed,'y+x+','x+y+')
     
     p=[geom.Point(*pair) for pair in zip(mlon_boxed.ravel(), mlat_boxed.ravel())]
+    from IPython.Debugger import Pdb
+    Pdb(color_scheme='Linux').set_trace()   
     if isinstance(unit, geometry.polygon.Polygon):
         p_in = set(iterops.contains(unit.exterior, p, True))
         for hole in unit.interiors:
