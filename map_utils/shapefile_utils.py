@@ -193,7 +193,12 @@ def rastervals_in_unit(unit, lon_min, lat_min, cellsize, data, view='y-x+'):
     mlat_boxed = grid_convert(mlat_boxed,'y+x+','x+y+')
     
     p=[geom.Point(*pair) for pair in zip(mlon_boxed.ravel(), mlat_boxed.ravel())]
-    p_in = iterops.contains(unit, p, True)
+    if isinstance(unit, geometry.polygon.Polygon):
+        p_in = set(iterops.contains(unit.exterior, p, True))
+        for hole in unit.interiors:
+            p_in -= set(iterops.contains(hole, p, True))
+    else:
+        p_in = iterops.contains(unit, p, True)
     i_in = [p.index(p_in_) for p_in_ in p_in]
     out = data_boxed[i_in]    
     
