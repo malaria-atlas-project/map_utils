@@ -18,6 +18,7 @@ from merge_close_points import *
 from tif2array import *
 
 from recarray_utils import *
+from clip_raster import *
 
 #from EmpiricalCovarianceLib import *
 
