@@ -53,7 +53,12 @@ def crr(rx, ry, rm, x, y):
     return crossings
             
 def clip_raster_to_ring(ring, lon, lat, isin, hole=False):
-    ring_slope = np.diff(ring.xy[1])/np.diff(ring.xy[0])
+    dy = np.diff(ring.xy[1])
+    dx = np.diff(ring.xy[0])
+    ring_slope = dx*0
+    ring_slope[np.where(dx==0)]=np.inf
+    where_nonzero = np.where(dx!=0)
+    ring_slope[where_nonzero] = dy[where_nonzero]/dx[where_nonzero]
     llcx,llcy,urcx,urcy = ring.bounds
     
     llcx_i, urcx_i, lon_patch = clip_vector(lon, llcx, urcx)
